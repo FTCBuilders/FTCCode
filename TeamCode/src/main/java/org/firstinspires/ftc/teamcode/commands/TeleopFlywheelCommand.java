@@ -12,12 +12,11 @@ public class TeleopFlywheelCommand extends CommandBase {
     public TeleopFlywheelCommand(FlywheelSubsystem flywheel, BooleanSupplier buttonValue) {
         this.flywheel = flywheel;
         this.buttonValue = buttonValue;
-
         addRequirements(flywheel);
     }
 
     @Override
     public void execute() {
-        flywheel.setPower(buttonValue.getAsBoolean() ? 1 : 0);
+        flywheel.updateButton(buttonValue.getAsBoolean());
     }
 }

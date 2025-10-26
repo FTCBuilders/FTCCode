@@ -9,6 +9,9 @@ public class IntakeSubsystem extends SubsystemBase {
     private final Motor intake;
     private Telemetry telemetry;
 
+    private boolean intakeOn = false;
+    private boolean lastButtonState = false;
+
     public IntakeSubsystem(HardwareMap hardwareMap) {
         intake = new Motor(hardwareMap, "intakeMotor");
     }
@@ -17,16 +20,18 @@ public class IntakeSubsystem extends SubsystemBase {
         this.telemetry = telemetry;
     }
 
-    public void setPower(double power) {
-        intake.set(power);
-        if (telemetry != null) {
-            telemetry.addData("Intake Power", "%.2f", power);
+    public void updateButton(boolean currentButtonState) {
+        if (currentButtonState && !lastButtonState) {
+            intakeOn = !intakeOn;
+            intake.set(intakeOn ? 1 : 0);
         }
-    }
 
+        lastButtonState = currentButtonState;
+    }
     @Override
     public void periodic() {
         if (telemetry != null) {
+            telemetry.addData("Intake On?", intakeOn);
             telemetry.addData("Intake Velocity (ticks/s)", intake.getCorrectedVelocity());
             telemetry.update();
         }

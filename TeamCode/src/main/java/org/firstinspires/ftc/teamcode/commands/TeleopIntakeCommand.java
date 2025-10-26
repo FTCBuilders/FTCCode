@@ -12,12 +12,11 @@ public class TeleopIntakeCommand extends CommandBase {
     public TeleopIntakeCommand(IntakeSubsystem intake, BooleanSupplier buttonValue) {
         this.intake = intake;
         this.buttonValue = buttonValue;
-
         addRequirements(intake);
     }
 
     @Override
     public void execute() {
-        intake.setPower(buttonValue.getAsBoolean() ? 1 : 0);
+        intake.updateButton(buttonValue.getAsBoolean());
     }
 }

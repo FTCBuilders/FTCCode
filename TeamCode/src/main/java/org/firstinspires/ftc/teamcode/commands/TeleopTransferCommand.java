@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.commands;
 
 import com.arcrobotics.ftclib.command.CommandBase;
-import org.firstinspires.ftc.teamcode.subsystems.FlywheelSubsystem;
 import org.firstinspires.ftc.teamcode.subsystems.TransferSubsystem;
 
 import java.util.function.BooleanSupplier;
@@ -13,12 +12,11 @@ public class TeleopTransferCommand extends CommandBase {
     public TeleopTransferCommand(TransferSubsystem transfer, BooleanSupplier buttonValue) {
         this.transfer = transfer;
         this.buttonValue = buttonValue;
-
         addRequirements(transfer);
     }
 
     @Override
     public void execute() {
-        transfer.setPower(buttonValue.getAsBoolean() ? 1 : 0);
+        transfer.updateButton(buttonValue.getAsBoolean());
     }
 }

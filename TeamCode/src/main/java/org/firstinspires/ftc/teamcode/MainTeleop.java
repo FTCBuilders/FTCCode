@@ -21,7 +21,7 @@ public class MainTeleop extends CommandOpMode {
 
     private DrivetrainSubsystem drivetrain;
     private FlywheelSubsystem flywheel;
-//    private TransferSubsystem transfer;
+    private TransferSubsystem transfer;
     private IntakeSubsystem intake;
     private GamepadEx driverController;
 
@@ -30,14 +30,14 @@ public class MainTeleop extends CommandOpMode {
         Pose2d initialPose = new Pose2d(0, 0, 0);
 
         drivetrain = new DrivetrainSubsystem(hardwareMap, initialPose);
-        drivetrain.setTelemetry(telemetry); // Add telemetry for debugging
+        drivetrain.setTelemetry(telemetry);
         driverController = new GamepadEx(gamepad1);
 
         flywheel = new FlywheelSubsystem(hardwareMap);
         flywheel.setTelemetry(telemetry);
 
-//        transfer = new TransferSubsystem(hardwareMap);
-//        transfer.setTelemetry(telemetry);
+        transfer = new TransferSubsystem(hardwareMap);
+        transfer.setTelemetry(telemetry);
 
         intake = new IntakeSubsystem(hardwareMap);
         intake.setTelemetry(telemetry);
@@ -58,12 +58,12 @@ public class MainTeleop extends CommandOpMode {
                 )
         );
 
-//        transfer.setDefaultCommand(
-//                new TeleopTransferCommand(
-//                        transfer,
-//                        () -> driverController.getButton(GamepadKeys.Button.X)
-//                )
-//        );
+        transfer.setDefaultCommand(
+                new TeleopTransferCommand(
+                        transfer,
+                        () -> driverController.getButton(GamepadKeys.Button.X)
+                )
+        );
 
         intake.setDefaultCommand(
                 new TeleopIntakeCommand(

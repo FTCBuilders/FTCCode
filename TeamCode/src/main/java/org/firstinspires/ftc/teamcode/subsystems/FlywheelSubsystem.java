@@ -9,6 +9,9 @@ public class FlywheelSubsystem extends SubsystemBase {
     private final Motor flywheel;
     private Telemetry telemetry;
 
+    private boolean flywheelOn = false;
+    private boolean lastButtonState = false;
+
     public FlywheelSubsystem(HardwareMap hardwareMap) {
         flywheel = new Motor(hardwareMap, "outtakeMotor");
     }
@@ -17,16 +20,19 @@ public class FlywheelSubsystem extends SubsystemBase {
         this.telemetry = telemetry;
     }
 
-    public void setPower(double power) {
-        flywheel.set(power);
-        if (telemetry != null) {
-            telemetry.addData("Flywheel Power", "%.2f", power);
+    public void updateButton(boolean currentButtonState) {
+        if (currentButtonState && !lastButtonState) {
+            flywheelOn = !flywheelOn;
+            flywheel.set(flywheelOn ? 1 : 0);
         }
+
+        lastButtonState = currentButtonState;
     }
 
     @Override
     public void periodic() {
         if (telemetry != null) {
+            telemetry.addData("Flywheel On?", flywheelOn);
             telemetry.addData("Flywheel Velocity (ticks/s)", flywheel.getCorrectedVelocity());
             telemetry.update();
         }

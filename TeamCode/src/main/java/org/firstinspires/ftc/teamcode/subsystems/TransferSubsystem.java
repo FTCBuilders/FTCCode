@@ -9,6 +9,9 @@ public class TransferSubsystem extends SubsystemBase {
     private final Motor transfer;
     private Telemetry telemetry;
 
+    private boolean transferOn = false;
+    private boolean lastButtonState = false;
+
     public TransferSubsystem(HardwareMap hardwareMap) {
         transfer = new Motor(hardwareMap, "transferMotor");
     }
@@ -17,16 +20,18 @@ public class TransferSubsystem extends SubsystemBase {
         this.telemetry = telemetry;
     }
 
-    public void setPower(double power) {
-        transfer.set(power);
-        if (telemetry != null) {
-            telemetry.addData("Transfer Power", "%.2f", power);
+    public void updateButton(boolean currentButtonState) {
+        if (currentButtonState && !lastButtonState) {
+            transferOn = !transferOn;
+            transfer.set(transferOn ? 1 : 0);
         }
-    }
 
+        lastButtonState = currentButtonState;
+    }
     @Override
     public void periodic() {
         if (telemetry != null) {
+            telemetry.addData("Transfer On?", transferOn);
             telemetry.addData("Transfer Velocity (ticks/s)", transfer.getCorrectedVelocity());
             telemetry.update();
         }
