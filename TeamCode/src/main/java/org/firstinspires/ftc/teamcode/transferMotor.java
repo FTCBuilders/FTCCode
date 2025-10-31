@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 
@@ -9,6 +10,7 @@ public class transferMotor {
     public transferMotor(HardwareMap hardwareMap) {
         transferMotor = hardwareMap.get(DcMotor.class, "transferMotor");
         transferMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        transferMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
     }
 

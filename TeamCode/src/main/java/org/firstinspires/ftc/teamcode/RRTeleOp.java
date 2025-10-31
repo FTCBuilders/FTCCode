@@ -7,16 +7,17 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 public class RRTeleOp extends LinearOpMode {
 
     private CustomMecanumDrive mecanumDrive; // your custom drive
-    private OuttakeMotor intakeMotor;
-    private OuttakeMotor outtake;
+    private OuttakeMotor outtakeMotor;
+
+    private intakeMotor intakeMotor;// single motor for both intake and outtake
     private transferMotor transferMotor;
 
-    // For toggle detection
-    boolean intakeForward = false;
-    boolean intakeBackward = false;
-    private boolean transferForward = false;
-    private boolean transferBackward = false;
-    private boolean yPressedLast = false;
+
+    private boolean intakeOuttakeRunning = false; // toggle state
+    private boolean aPressedLast = false;
+    private boolean transferRunning = false;   // current toggle state
+    private boolean yPressedLast = false;      // track Y button press
+
 
 
     @Override
@@ -24,8 +25,8 @@ public class RRTeleOp extends LinearOpMode {
 
         // Initialize subsystems
         mecanumDrive = new CustomMecanumDrive(hardwareMap);
-        outtake = new OuttakeMotor(hardwareMap);
-        intakeMotor = outtake;
+         outtakeMotor =  new OuttakeMotor(hardwareMap);
+        intakeMotor = new intakeMotor(hardwareMap);
         transferMotor = new transferMotor(hardwareMap);
 
         telemetry.addLine("Initialized — Ready to run");
@@ -41,67 +42,39 @@ public class RRTeleOp extends LinearOpMode {
             mecanumDrive.setDrivePower(forward, strafe, rotate);
 
             // ----- TRANSFER SUBSYSTEM CONTROL -----
-            if (gamepad1.y && !yPressedLast) {
-                if (transferBackward) {
-                    transferBackward = false;  // turn off backward
-                } else {
-                    transferBackward = true;   // start backward
-                    transferForward = false;   // ensure forward is off
-                }
+            // Hold Y for forward, hold X for backward
+            if (gamepad1.y && !yPressedLast) {       // detect new press
+                transferRunning = !transferRunning;  // flip the toggle
             }
-            yPressedLast = gamepad1.y;  // update last state
+            yPressedLast = gamepad1.y;
 
-// Set motor power based on toggle state
-            if (transferForward) {
-                transferMotor.setPower(1.0);   // forward
-            } else if (transferBackward) {
-                transferMotor.setPower(-1.0);  // backward
+            if (transferRunning) {
+                transferMotor.setPower(.8);        // run forward
             } else {
-                transferMotor.stop();           // stopped
+                transferMotor.stop();                // stop
             }
 
-            // Backward toggle
-
-
-            // ----- INTAKE TOGGLE CONTROL -----
-            // Forward toggle
-            if (gamepad1.dpad_up) {
-                if (intakeForward) {
-                    intakeForward = false;
-                } else {
-                    intakeForward = true;
-                    intakeBackward = false;
-                }
+            // ----- INTAKE/OUTTAKE CONTROL -----
+            // Hold dpad_up for intake, hold dpad_down for outtake
+            if (gamepad1.a && !aPressedLast) {
+                intakeOuttakeRunning = !intakeOuttakeRunning; // toggle state
             }
+            aPressedLast = gamepad1.a;
 
-            // Backward toggle
-            if (gamepad1.dpad_down) {
-                if (intakeBackward) {
-                    intakeBackward = false;
-                } else {
-                    intakeBackward = true;
-                    intakeForward = false;
-                }
-            }
-
-            if (intakeForward) {
-                intakeMotor.start(1.0);
-            } else if (intakeBackward) {
-                intakeMotor.start(-1.0);
+            if (intakeOuttakeRunning) {
+                intakeMotor.setPower(.8);   // run intake
+                outtakeMotor.setPower(.8);  // run outtake at same time
             } else {
                 intakeMotor.stop();
+                outtakeMotor.stop();
             }
 
 
-            // ----- OUTTAKE CONTROL -----
-            if (gamepad1.a) outtake.start(1.0);
-            else outtake.stop();
 
             // ----- TELEMETRY -----
             telemetry.addData("Drive F/S/R", "%.2f / %.2f / %.2f", forward, strafe, rotate);
             telemetry.addData("TransferMotor Power", transferMotor.getPower());
-            telemetry.addData("IntakeMotor Power", intakeMotor.power());
-            telemetry.addData("Outtake Power", outtake.power());
+            telemetry.addData("intakeOuttakeMotor", intakeMotor.getPower());
             telemetry.update();
         }
     }

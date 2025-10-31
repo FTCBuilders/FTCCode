@@ -4,182 +4,144 @@ import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import com.acmerobotics.roadrunner.Pose2d;
 import org.firstinspires.ftc.teamcode.roadrunner.MecanumDrive;
 
-
-import java.util.Arrays;
 import java.util.List;
 
-
-@Autonomous(name="RR_Auto_Preloaded", group="Auto")
+@Autonomous(name="RR_Auto", group="Auto")
 public class RRAuto extends LinearOpMode {
+
     private MecanumDrive drive;
     private OuttakeMotor outtake;
     private transferMotor transfer;
     private intakeMotor intake;
-    private AprilTag aprilTag;
+    private AprilTag webcam1Tag; // explicitly for Webcam 1
 
+    private static final double SHOOT_DISTANCE = 12.0; // inches to stop from tag
+    private static final int BALL_COUNT = 3;
+    private static final double RANGE_TOLERANCE = 1.0; // inches
+    private static final double STRAFE_TOLERANCE = 1.0; // inches (camera Y)
+    private static final double HEADING_TOLERANCE_DEG = 2.0; // degrees
 
-    private ElapsedTime timer = new ElapsedTime();
-
-    // Path points (units in inches)
-    private Pose2d startPose = new Pose2d(6, 12, 0);         // starting near player
-    private Pose2d shootingPose = new Pose2d(6, 20, 0);      // in front of shooter
-    private Pose2d safeZonePose = new Pose2d(36, 0, 0);      // safe zone parking
-
-    private final double DIST_TOLERANCE = 0.5;
-    private final double HEADING_TOLERANCE = Math.toRadians(2);
-
+    // Simple proportional gains for camera-based approach
+    private static final double K_FORWARD = 0.05;
+    private static final double K_STRAFE  = 0.06;
+    private static final double K_TURN    = 0.04;
+    private static final double MAX_CMD   = 0.6;
 
     @Override
     public void runOpMode() throws InterruptedException {
-        drive = new MecanumDrive(hardwareMap,  new Pose2d(0,0,0));
+        // Initialize subsystems
+        drive = new MecanumDrive(hardwareMap, new Pose2d(0,0,0));
         outtake = new OuttakeMotor(hardwareMap);
         transfer = new transferMotor(hardwareMap);
         intake = new intakeMotor(hardwareMap);
+        webcam1Tag = new AprilTag(hardwareMap); // uses Webcam 1 inside the AprilTag class
 
-        //if it can detect april tag
-
-        try {
-            aprilTag = new AprilTag(hardwareMap);
-        } catch (Exception e) {
-            aprilTag = null;
-            telemetry.addLine("AprilTag sensor not found — skipping detection");
-            telemetry.update();
-        }
-
-
-        telemetry.addLine("Initialized — Ready to run");
+        telemetry.addLine("Initialized — waiting for start");
         telemetry.update();
-
         waitForStart();
-
-        boolean reachedShootingPose = false;
-
-        while (opModeIsActive() && !reachedShootingPose) {
-            // Move towards shooting position while optionally doing other actions
-            reachedShootingPose = moveToPoseNonBlocking(shootingPose);
-
-            // Example: spin up shooter continuously while moving
-            outtake.start(1.0);
-            transfer.setPower(1.0);
-
-            telemetry.addData("Moving to shooting pose", !reachedShootingPose);
-            telemetry.update();
-
-            sleep(20); // small loop delay
-        }
 
         if (isStopRequested()) return;
 
-        // 1️⃣ Move to shooting position
-        moveToPoseNonBlocking(shootingPose);
+        // Step 1: Continuously approach tag until within shooting range
+        boolean inShootingPosition = false;
+        while (opModeIsActive() && !inShootingPosition) {
+            AprilTagDetection targetTag = getClosestDetection();
 
+            if (targetTag != null && targetTag.ftcPose != null) {
+                double[] powers = computeDriveToTag(targetTag, SHOOT_DISTANCE);
+                drive.setDrivePowers(new PoseVelocity2d(new Vector2d(powers[0], powers[1]), powers[2]));
 
-        // 2️⃣ Shoot preloaded balls (only when in front of shooter)
-        shootBalls(3);
+                telemetry.addData("Range", targetTag.ftcPose.range);
+                telemetry.addData("Bearing", targetTag.ftcPose.bearing);
+                telemetry.addData("Yaw", targetTag.ftcPose.yaw);
 
-        // 3️⃣ Scan AprilTag and display pattern on telemetry
-        boolean aprilDetected = false;
-        if (aprilTag != null) {
-            List<AprilTagDetection> detections = aprilTag.getDetections();
-            if (!detections.isEmpty()) {
-                aprilDetected = true;
-                // Optionally handle detection info here
-                for (AprilTagDetection tag : detections) {
-                    telemetry.addData("AprilTag ID", tag.id);
+                if (Math.abs(targetTag.ftcPose.range - SHOOT_DISTANCE) <= RANGE_TOLERANCE
+                        && Math.abs(targetTag.ftcPose.y) <= STRAFE_TOLERANCE
+                        && Math.abs(targetTag.ftcPose.bearing) <= HEADING_TOLERANCE_DEG) {
+                    inShootingPosition = true;
+                    drive.setDrivePowers(new PoseVelocity2d(new Vector2d(0,0),0));
                 }
-                telemetry.update();
+            } else {
+                drive.setDrivePowers(new PoseVelocity2d(new Vector2d(0,0),0));
+                telemetry.addLine("Searching for tag...");
             }
+            telemetry.update();
+            sleep(20);
         }
 
-        //stop shooting
-        moveToPoseNonBlocking(safeZonePose);
+        // Step 2: Shoot preloaded balls
+        for (int i = 0; i < BALL_COUNT; i++) {
+            outtake.setPower(1.0);
+            transfer.setPower(1.0);
+            sleep(700); // shooting duration
+            outtake.stop();
+            transfer.stop();
+            sleep(200); // short pause
+        }
 
-        // 4️⃣ Park in safe zone
+        // Step 3: Park dynamically using the same tag or other detected tags
+        boolean parked = false;
+        while (opModeIsActive() && !parked) {
+            AprilTagDetection parkTag = getClosestDetection();
 
-        telemetry.addLine("Auto complete!");
+            if (parkTag != null && parkTag.ftcPose != null) {
+                double[] powers = computeDriveToTag(parkTag, SHOOT_DISTANCE + 18.0);
+                drive.setDrivePowers(new PoseVelocity2d(new Vector2d(powers[0], powers[1]), powers[2]));
+
+                telemetry.addData("Parking Range", parkTag.ftcPose.range);
+                telemetry.addData("Parking Bearing", parkTag.ftcPose.bearing);
+
+                if (Math.abs(parkTag.ftcPose.range - (SHOOT_DISTANCE + 18.0)) <= RANGE_TOLERANCE
+                        && Math.abs(parkTag.ftcPose.y) <= STRAFE_TOLERANCE
+                        && Math.abs(parkTag.ftcPose.bearing) <= HEADING_TOLERANCE_DEG) {
+                    drive.setDrivePowers(new PoseVelocity2d(new Vector2d(0,0),0));
+                    parked = true;
+                }
+            } else {
+                drive.setDrivePowers(new PoseVelocity2d(new Vector2d(0,0),0));
+                parked = true;
+            }
+            telemetry.update();
+            sleep(20);
+        }
+
+        drive.setDrivePowers(new PoseVelocity2d(new Vector2d(0,0),0));
+        telemetry.addLine("Autonomous complete!");
         telemetry.update();
-
     }
 
-    private boolean moveToPoseNonBlocking (Pose2d target) {
-
-            Pose2d current = drive.localizer.getPose();
-
-            double dx = target.position.x - current.position.x;
-            double dy = target.position.y - current.position.y;
-            double dHeading = angleDifference(target.heading.toDouble(), current.heading.toDouble());
-
-            double distance = Math.hypot(dx, dy);
-
-            if (distance < DIST_TOLERANCE && Math.abs(dHeading) < HEADING_TOLERANCE) {
-                drive.setDrivePowers(new PoseVelocity2d(new Vector2d(0.0, 0.0), 0.0));
-                return true;
-            }
-
-            double kPos = 0.1;
-            double kHeading = 0.1;
-
-        double vx = clamp(dx * kPos, -1.0, 1.0);
-        double vy = clamp(dy * kPos, -1.0, 1.0);
-        double omega = clamp(dHeading * kHeading, -1.0, 1.0);
-
-        drive.setDrivePowers(new PoseVelocity2d(new Vector2d(vx, vy), omega));
-
-        sleep(20);
-
-        return false;
-
+    // Get the closest detection from Webcam 1
+    private AprilTagDetection getClosestDetection() {
+        if (webcam1Tag == null) return null;
+        List<AprilTagDetection> detections = webcam1Tag.getDetections();
+        if (detections == null || detections.isEmpty()) return null;
+        AprilTagDetection best = null;
+        for (AprilTagDetection d : detections) {
+            if (d.ftcPose == null) continue;
+            if (best == null || d.ftcPose.range < best.ftcPose.range) best = d;
         }
+        return best;
+    }
 
-   // clamper helper
+    // Compute drive powers [vx, vy, omega] to approach a tag to a desired range
+    private double[] computeDriveToTag(AprilTagDetection tag, double desiredRangeInches) {
+        double rangeErr   = tag.ftcPose.range - desiredRangeInches; // + means too far
+        double strafeErr  = tag.ftcPose.y;                           // + means tag to the left
+        double headingErr = Math.toRadians(tag.ftcPose.bearing);     // degrees -> radians
+
+        double vx    = clamp(rangeErr * K_FORWARD, -MAX_CMD, MAX_CMD);
+        double vy    = clamp(strafeErr * K_STRAFE, -MAX_CMD, MAX_CMD);
+        double omega = clamp(headingErr * K_TURN, -MAX_CMD, MAX_CMD);
+
+        return new double[] { vx, vy, omega };
+    }
+
     private double clamp(double val, double min, double max) {
         return Math.max(min, Math.min(max, val));
     }
-
-    // helper for angle wrap-around
-    private double angleDifference(double target, double current) {
-        double diff = target - current;
-        while (diff > Math.PI) diff -= 2 * Math.PI;
-        while (diff < -Math.PI) diff += 2 * Math.PI;
-        return diff;
-    }
-
-
-    private void shootBalls(int count) throws InterruptedException {
-        for (int i = 0; i < count; i++) {
-            // Start shooting
-            outtake.start(1.0);
-            transfer.setPower(1.0);
-
-            sleep(700);  // time to shoot one ball
-
-            // Stop motors after each shot
-            outtake.stop();
-            transfer.stop();
-
-            sleep(200);  // short pause between shots
-        }
-    }
-
-    private void scanAprilTag() {
-        List<AprilTagDetection> detections = aprilTag.getDetections();
-        if (detections.isEmpty()) {
-            telemetry.addLine("No AprilTag detected");
-        } else {
-            for (AprilTagDetection tag : detections) {
-                telemetry.addLine("AprilTag ID: " + tag.id);
-                telemetry.addLine("Motif pattern: PURPLE, GREEN, PURPLE"); // Example pattern
-            }
-        }
-        telemetry.update();
-
-    }
-
 }

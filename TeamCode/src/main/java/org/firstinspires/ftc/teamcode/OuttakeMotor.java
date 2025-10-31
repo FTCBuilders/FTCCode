@@ -1,30 +1,40 @@
 package org.firstinspires.ftc.teamcode;
+
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+
 public class OuttakeMotor {
 
-    private DcMotor outtakeMotor;
+    private final DcMotor motor;
 
     public OuttakeMotor(HardwareMap hardwareMap) {
-        outtakeMotor = hardwareMap.get(DcMotor.class, "outtakeMotor");
-        outtakeMotor.setDirection(DcMotor.Direction.FORWARD);
-        outtakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motor = hardwareMap.get(DcMotor.class, "outtakeMotor"); // same motor
+        motor.setDirection(DcMotor.Direction.FORWARD);
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
-    // Run motor at given power
-    public void start(double power){
-        outtakeMotor.setPower(power);
+    // Intake direction (forward)
+    public void intake(double power) {
+        motor.setPower(Math.abs(power));  // always positive for intake
+    }
+
+    // Outtake direction (reverse)
+    public void outtake(double power) {
+        motor.setPower(-Math.abs(power)); // always negative for outtake
     }
 
     // Stop motor
-    public void stop(){
-        outtakeMotor.setPower(0);
+    public void stop() {
+        motor.setPower(0);
     }
 
-    // Get current motor power
-    public double power(){
-        return outtakeMotor.getPower();
+    // Generic start (if you need direct control)
+    public void setPower(double power) {
+        motor.setPower(power);
     }
 
-
+    // Get current power
+    public double getPower(double v) {
+        return motor.getPower();
+    }
 }
