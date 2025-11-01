@@ -62,8 +62,8 @@ public class RRTeleOp extends LinearOpMode {
             aPressedLast = gamepad1.a;
 
             if (intakeOuttakeRunning) {
-                intakeMotor.setPower(.8);   // run intake
-                outtakeMotor.setPower(.8);  // run outtake at same time
+                intakeMotor.setPower(1.0);   // run intake
+                outtakeMotor.setPower(.67);  // run outtake at same time
             } else {
                 intakeMotor.stop();
                 outtakeMotor.stop();
