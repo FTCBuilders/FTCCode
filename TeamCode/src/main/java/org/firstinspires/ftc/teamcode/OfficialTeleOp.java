@@ -73,7 +73,7 @@ public class OfficialTeleOp extends LinearOpMode {
 
             // ----- TELEMETRY -----
             telemetry.addData("Drive F/S/R", "%.2f / %.2f / %.2f", forward, strafe, rotate);
-            telemetry.addData("Reverse Mode", reverseMode ? "ON (Left Trigger)" : "OFF");
+            telemetry.addData("Reverse mode", reverseMode ? "ON (Left Trigger)" : "OFF");
             telemetry.addData("Intake", intakeOn ? "ON" : "OFF");
             telemetry.addData("Transfer", gamepad1.right_trigger > 0 ? "ON" : "OFF");
             telemetry.addData("Outtake", outtakeOn ? "ON" : "OFF");
