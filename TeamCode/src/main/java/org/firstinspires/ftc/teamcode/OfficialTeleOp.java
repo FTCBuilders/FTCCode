@@ -9,7 +9,7 @@ public class OfficialTeleOp extends LinearOpMode {
     private CustomMecanumDrive mecanumDrive;
     private intakeMotor intakeMotor;
     private transferMotor transferMotor;
-    private OuttakeMotor outtakeMotor;
+    private PIDOuttakeMotor outtakeMotor;
 
     // ----- TOGGLE STATES -----
     private boolean intakeOn = false;
@@ -26,7 +26,7 @@ public class OfficialTeleOp extends LinearOpMode {
         mecanumDrive = new CustomMecanumDrive(hardwareMap);
         intakeMotor = new intakeMotor(hardwareMap);
         transferMotor = new transferMotor(hardwareMap);
-        outtakeMotor = new OuttakeMotor(hardwareMap);
+        outtakeMotor = new PIDOuttakeMotor(hardwareMap);
 
         telemetry.addLine("Initialized — Ready to run");
         telemetry.update();
@@ -36,15 +36,14 @@ public class OfficialTeleOp extends LinearOpMode {
         while (opModeIsActive()) {
 
             // ----- DRIVE CONTROL -----
-            double forward = gamepad1.right_stick_x;
-            double strafe = gamepad1.right_stick_y;
-            double rotate = -gamepad1.left_stick_y;
+            double forward = -gamepad2.left_stick_y;
+            double strafe = gamepad2.left_stick_x;
+            double rotate = gamepad2.right_stick_x;
             mecanumDrive.setDrivePower(forward, strafe, rotate);
 
             // Check if left trigger is pressed (reverse mode)
             boolean reverseMode = gamepad1.left_trigger > 0; // Adjust threshold as needed
             double direction = reverseMode ? 1.0 : -1.0; // flip motor directions
-            double flywheelSpeed = 0.75;
 
             // ----- INTAKE TOGGLE (A button) -----
             if (gamepad1.a && !lastIntakeButton) {
@@ -68,15 +67,22 @@ public class OfficialTeleOp extends LinearOpMode {
             }
             lastOuttakeButton = gamepad1.right_bumper;
 
-            if (outtakeOn) outtakeMotor.start(flywheelSpeed);
-            else outtakeMotor.stop();
+            if (outtakeOn) {
+                double targetVelocity = 29000;  // ≈4500 RPM
+                outtakeMotor.start(targetVelocity);
+            } else {
+                outtakeMotor.stop();
+            }
 
             // ----- TELEMETRY -----
             telemetry.addData("Drive F/S/R", "%.2f / %.2f / %.2f", forward, strafe, rotate);
             telemetry.addData("Reverse mode", reverseMode ? "ON (Left Trigger)" : "OFF");
             telemetry.addData("Intake", intakeOn ? "ON" : "OFF");
             telemetry.addData("Transfer", gamepad1.right_trigger > 0 ? "ON" : "OFF");
-            telemetry.addData("Outtake", outtakeOn ? "ON" : "OFF");
+            telemetry.addData("Flywheel Target", outtakeMotor.getTargetVelocity());
+            telemetry.addData("Flywheel Actual", outtakeMotor.getVelocity());
+            telemetry.addData("Flywheel Error",
+                    outtakeMotor.getTargetVelocity() - outtakeMotor.getVelocity());
             telemetry.update();
         }
     }

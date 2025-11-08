@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-@TeleOp(name = "OfficialTeleOp", group = "Linear OpMode")
+@TeleOp(name = "TestingTeleOp", group = "Linear OpMode")
 public class TestingTeleOp extends LinearOpMode {
 
     private CustomMecanumDrive mecanumDrive;
@@ -38,9 +38,9 @@ public class TestingTeleOp extends LinearOpMode {
         while (opModeIsActive()) {
 
             // ----- DRIVE CONTROL -----
-            double forward = gamepad1.right_stick_x;
-            double strafe = gamepad1.right_stick_y;
-            double rotate = -gamepad1.left_stick_y;
+            double forward = -gamepad1.left_stick_y;
+            double strafe = gamepad1.left_stick_x;
+            double rotate = gamepad1.right_stick_x;
             mecanumDrive.setDrivePower(forward, strafe, rotate);
 
             // Check if left trigger is pressed (reverse mode)
@@ -59,19 +59,25 @@ public class TestingTeleOp extends LinearOpMode {
             // ----- SHOOT CONTROL (right trigger) -----
             double flywheelSpeed = 0.75;
             boolean shootPressed = gamepad1.right_trigger > 0;  // adjust threshold
+            boolean isShooting = false;
 
             if (shootPressed) {
+                isShooting = !isShooting;
+            }
+
+            if (isShooting) {
                 // Spin up flywheel
-                outtakeMotor.start(flywheelSpeed);
+                outtakeMotor.start(-flywheelSpeed);
 
                 // Once at speed (or after small delay), feed ball
                 // We'll use a simple timer-based delay here
                 long currentTime = System.currentTimeMillis();
                 if (shootStartTime == 0) shootStartTime = currentTime; // mark the first press
-                if (currentTime - shootStartTime > 500) {  // wait 500ms for spin-up
+                if (currentTime - shootStartTime > 2500) {  // wait 2.5s for spin-up
                     intakeMotor.setPower(-1.0);      // run intake forward
                     transferMotor.setPower(-1.0);    // run transfer forward
                 }
+
             } else {
                 // Stop everything when released
                 shootStartTime = 0;
