@@ -28,6 +28,13 @@ public class CustomMecanumDrive {
 
     }
 
+    public void stop() {
+        frontLeft.setPower(0);
+        frontRight.setPower(0);
+        backLeft.setPower(0);
+        backRight.setPower(0);
+    }
+
     public void setDrivePower(double forward, double strafe, double rotate) {
         double fl = forward + strafe + rotate;
         double fr = forward  - strafe - rotate;

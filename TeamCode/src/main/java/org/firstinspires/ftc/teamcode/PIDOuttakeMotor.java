@@ -2,45 +2,54 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 public class PIDOuttakeMotor {
 
-    private final DcMotorEx outtakeMotor;
-
-    // --- PIDF coefficients (starting points) ---
-    private static final double kP = 30.0; // acceleration speed for getting to targeted rpm
-    private static final double kI = 0.0; // patches up a small, permanent error
-    private static final double kD = 0.0; // slows down acceleration just before targeted rpm
-    private static final double kF = 0.85; // base power
-
-    // --- Desired velocity ---
+    private final DcMotorEx motor;
     private double targetTicksPerSecond = 0;
 
+    // Adjust these if needed
+    private static final double achievableMaxTicksPerSecond = 1880.0;
+
     public PIDOuttakeMotor(HardwareMap hardwareMap) {
-        outtakeMotor = hardwareMap.get(DcMotorEx.class, "outtakeMotor");
-        outtakeMotor.setDirection(DcMotorEx.Direction.FORWARD);
-        outtakeMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
-        outtakeMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        motor = hardwareMap.get(DcMotorEx.class, "outtakeMotor");
+        motor.setDirection(DcMotorEx.Direction.REVERSE);
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        outtakeMotor.setVelocityPIDFCoefficients(kP, kI, kD, kF);
+        // Reset encoder and enable RUN_USING_ENCODER mode
+        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        // Configure PIDF coefficients for velocity control
+        double kF = 32767.0 / achievableMaxTicksPerSecond; // feedforward for max achievable
+        PIDFCoefficients pidf = new PIDFCoefficients(0.001, 0.00005, 0.0, kF);
+        motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
     }
 
-    // Run motor at desired velocity
+    /** Start flywheel at desired velocity (ticks per second) */
     public void start(double ticksPerSecond) {
+        if (ticksPerSecond < 0) ticksPerSecond = 0;
+        if (ticksPerSecond > achievableMaxTicksPerSecond)
+            ticksPerSecond = achievableMaxTicksPerSecond;
+
         targetTicksPerSecond = ticksPerSecond;
-        outtakeMotor.setVelocity(ticksPerSecond);
+        motor.setVelocity(targetTicksPerSecond);
     }
 
-    // Stop motor
+    /** Stop the flywheel */
     public void stop() {
         targetTicksPerSecond = 0;
-        outtakeMotor.setPower(0);
+        motor.setPower(0);
     }
 
+    /** Returns current velocity in ticks/sec */
     public double getVelocity() {
-        return outtakeMotor.getVelocity();
+        return motor.getVelocity();
     }
 
+    /** Returns the target velocity */
     public double getTargetVelocity() {
         return targetTicksPerSecond;
     }
