@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.Gamepad;
 
 @TeleOp(name = "OfficialTeleOpTwoDrivers", group = "Linear OpMode")
 public class OfficialTeleOpTwoDrivers extends LinearOpMode {
@@ -21,8 +22,28 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
     private boolean lastDpadUp = false;
     private boolean lastDpadDown = false;
 
+    Gamepad driveController;
+    Gamepad ballController;
+
     private double applyDeadband(double value, double threshold) {
         return Math.abs(value) > threshold ? value : 0.0;
+    }
+
+    private void setupControllers() {
+        // Run with a single controller if the other one has not been seen yet
+        if (gamepad1.getGamepadId() > -1 && gamepad2.getGamepadId() == -1) {
+            // gamepad2 seems disconnected, so let's use gamepad1 for everything
+            driveController = gamepad1;
+            ballController = gamepad1;
+        } else if (gamepad1.getGamepadId() == -1 && gamepad2.getGamepadId() > -1) {
+            // gamepad1 seems disconnected, so let's use gamepad2 for everything
+            driveController = gamepad2;
+            ballController = gamepad2;
+        } else {
+            // Both gamepads are in the same state, so assign them to their default roles
+            driveController = gamepad1;
+            ballController = gamepad2;
+        }
     }
 
     @Override
@@ -41,11 +62,12 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
+            setupControllers();
 
             // ----- DRIVE CONTROL -----
-            double forward = -applyDeadband(gamepad1.left_stick_y,0.05);
-            double strafe = applyDeadband(gamepad1.left_stick_x,0.05);
-            double rotate = applyDeadband(gamepad1.right_stick_x,0.05);
+            double forward = -applyDeadband(driveController.left_stick_y,0.05);
+            double strafe = applyDeadband(driveController.left_stick_x,0.05);
+            double rotate = applyDeadband(driveController.right_stick_x,0.05);
 
             if (Math.abs(forward) < 0.05 && Math.abs(strafe) < 0.05 && Math.abs(rotate) < 0.05)
                 mecanumDrive.stop();
@@ -55,11 +77,11 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
             mecanumDrive.setDrivePower(forward, strafe, rotate);
 
             // Check if left trigger is pressed (reverse mode)
-            boolean reverseMode = gamepad2.left_trigger > 0.1;
+            boolean reverseMode = ballController.left_trigger > 0.1;
             double direction = reverseMode ? 1.0 : -1.0;
 
             // ----- INTAKE TOGGLE (A button) -----
-            boolean currentIntakeButton = gamepad2.a;
+            boolean currentIntakeButton = ballController.a;
             if (currentIntakeButton && !lastIntakeButton) {
                 intakeOn = !intakeOn;
             }
@@ -69,13 +91,13 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
             else intakeMotor.stop();
 
             // ----- TRANSFER (right trigger) -----
-            boolean transferPressed = gamepad2.right_trigger > 0.1;
+            boolean transferPressed = ballController.right_trigger > 0.1;
             if (transferPressed) transferMotor.setPower(direction);
             else transferMotor.stop();
 
             // ----- DPAD UP/DOWN (adjust flywheel speed once per press) -----
-            boolean currentDpadUp = gamepad2.dpad_up;
-            boolean currentDpadDown = gamepad2.dpad_down;
+            boolean currentDpadUp = ballController.dpad_up;
+            boolean currentDpadDown = ballController.dpad_down;
 
             if (currentDpadUp && !lastDpadUp) {
                 targetTicksPerSecond += 50;
@@ -88,7 +110,7 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
             lastDpadDown = currentDpadDown;
 
             // ----- OUTTAKE TOGGLE (right bumper) -----
-            boolean currentOuttakeButton = gamepad2.right_bumper;
+            boolean currentOuttakeButton = ballController.right_bumper;
             if (currentOuttakeButton && !lastOuttakeButton) {
                 outtakeOn = !outtakeOn;
             }
@@ -111,6 +133,11 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
             telemetry.addData("Flywheel Target", outtakeMotor.getTargetVelocity());
             telemetry.addData("Flywheel Actual", outtakeMotor.getVelocity());
             telemetry.addData("Flywheel Error", outtakeMotor.getTargetVelocity() - outtakeMotor.getVelocity());
+            telemetry.addData("Drive Controller", driveController == gamepad1 ? "User 1 (BLUE)" : "User 2 (RED)");
+            telemetry.addData("Ball Controller", ballController == gamepad1 ? "User 1 (BLUE)" : "User 2 (RED)");
+            telemetry.addData("Gamepad1 ID", gamepad1.getGamepadId());
+            telemetry.addData("Gamepad2 ID", gamepad2.getGamepadId());
+
             telemetry.update();
         }
     }
