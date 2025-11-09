@@ -83,6 +83,8 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
                 outtakeMotor.stop();
             }
 
+            outtakeMotor.update();
+
             // ----- TELEMETRY -----
             telemetry.addData("Drive F/S/R", "%.2f / %.2f / %.2f", forward, strafe, rotate);
             telemetry.addData("Reverse mode", reverseMode ? "ON (Left Trigger)" : "OFF");
