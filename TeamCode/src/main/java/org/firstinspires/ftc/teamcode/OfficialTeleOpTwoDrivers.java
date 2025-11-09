@@ -18,6 +18,8 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
     // ----- BUTTON STATE TRACKING -----
     private boolean lastIntakeButton = false;
     private boolean lastOuttakeButton = false;
+    private boolean lastDpadUp = false;
+    private boolean lastDpadDown = false;
 
     private double applyDeadband(double value, double threshold) {
         return Math.abs(value) > threshold ? value : 0.0;
@@ -31,6 +33,7 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
         intakeMotor = new intakeMotor(hardwareMap);
         transferMotor = new transferMotor(hardwareMap);
         outtakeMotor = new PIDOuttakeMotor(hardwareMap);
+        int targetTicksPerSecond = 1500;
 
         telemetry.addLine("Initialized — Ready to run");
         telemetry.update();
@@ -70,6 +73,20 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
             if (transferPressed) transferMotor.setPower(direction);
             else transferMotor.stop();
 
+            // ----- DPAD UP/DOWN (adjust flywheel speed once per press) -----
+            boolean currentDpadUp = gamepad2.dpad_up;
+            boolean currentDpadDown = gamepad2.dpad_down;
+
+            if (currentDpadUp && !lastDpadUp) {
+                targetTicksPerSecond += 50;
+            }
+            if (currentDpadDown && !lastDpadDown) {
+                targetTicksPerSecond -= 50;
+            }
+
+            lastDpadUp = currentDpadUp;
+            lastDpadDown = currentDpadDown;
+
             // ----- OUTTAKE TOGGLE (right bumper) -----
             boolean currentOuttakeButton = gamepad2.right_bumper;
             if (currentOuttakeButton && !lastOuttakeButton) {
@@ -78,7 +95,7 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
             lastOuttakeButton = currentOuttakeButton;
 
             if (outtakeOn) {
-                outtakeMotor.start(1750);
+                outtakeMotor.start(targetTicksPerSecond);
             } else {
                 outtakeMotor.stop();
             }
@@ -90,14 +107,10 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
             telemetry.addData("Reverse mode", reverseMode ? "ON (Left Trigger)" : "OFF");
             telemetry.addData("Intake", intakeOn ? "ON" : "OFF");
             telemetry.addData("Transfer", transferPressed ? "ON" : "OFF");
+            telemetry.addData("Flywheel Target Ticks Per Second", targetTicksPerSecond);
             telemetry.addData("Flywheel Target", outtakeMotor.getTargetVelocity());
             telemetry.addData("Flywheel Actual", outtakeMotor.getVelocity());
             telemetry.addData("Flywheel Error", outtakeMotor.getTargetVelocity() - outtakeMotor.getVelocity());
-            telemetry.addData("gamepad right bumper", gamepad2.right_bumper);
-            telemetry.addData("gamepad a", gamepad2.a);
-            telemetry.addData("gamepad right trigger", gamepad2.right_trigger);
-            telemetry.addData("gamepad left trigger", gamepad2.left_trigger);
-
             telemetry.update();
         }
     }

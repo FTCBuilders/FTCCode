@@ -22,9 +22,19 @@ public class PIDOuttakeMotor {
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // Set PIDF coefficients for velocity control
-        double kF = 32767.0 / ACHIEVABLE_MAX_TICKS_PER_SECOND; // max feedforward
-        PIDFCoefficients pidf = new PIDFCoefficients(0.001, 0.00005, 0.0, kF);
+        double kP = 1.0;
+        double kI = 0.00005;
+        double kD = 0.0;
+        double kF = 17; // Magic number that makes motor run at full speed
+
+        PIDFCoefficients pidf = new PIDFCoefficients(kP, kI, kD, kF);
         motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
+
+        /*
+        double testKf = 17; // Magic number that makes motor run at full speed
+        PIDFCoefficients pidf = new PIDFCoefficients(0, 0, 0, testKf);
+        motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
+        */
     }
 
     /** Start flywheel at desired velocity */
