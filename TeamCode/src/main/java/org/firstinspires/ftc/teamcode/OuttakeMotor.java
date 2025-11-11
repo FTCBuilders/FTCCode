@@ -2,83 +2,69 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 public class OuttakeMotor {
 
     private final DcMotorEx motor;
-    private final VoltageSensor voltageSensor;
+    private double targetVelocity = 0;
 
-    // PID constants for outtake
-    private double kP = 0.0005;
-    private double kI = 0.00001;
-    private double kD = 0.0001;
+    // Estimated max ticks per second (change if you know your motor specs)
+    private static final double MAX_TICKS_PER_SECOND = 1880.0;
 
-    private double integral = 0;
-    private double lastError = 0;
-
-    private double nominalVoltage = 12.0;
-    private long lastTime;
+    // PIDF values for built-in control — tune if needed
+    private static final double kP = 1.0;
+    private static final double kI = 0.00005;
+    private static final double kD = 0.0;
+    private static final double kF = 17.0; // Feedforward, scales motor power
 
     public OuttakeMotor(HardwareMap hardwareMap) {
         motor = hardwareMap.get(DcMotorEx.class, "outtakeMotor");
-        motor.setDirection(DcMotorEx.Direction.FORWARD);
-        motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        motor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
-        voltageSensor = hardwareMap.voltageSensor.iterator().next();
-        lastTime = System.nanoTime();
+        // Basic setup
+        motor.setDirection(DcMotor.Direction.REVERSE);
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        // Apply PIDF coefficients
+        PIDFCoefficients pidf = new PIDFCoefficients(kP, kI, kD, kF);
+        motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
     }
 
-    // ===== Intake control (stronger, ignores PID) =====
-    public void intake(double power) {
-        // boost intake without affecting PID for outtake
-        motor.setPower(Math.min(Math.abs(power) * 1.5, 1.0)); // clamp to 1
+    /** Start the flywheel with desired velocity (ticks/second) */
+    public void start(double ticksPerSecond) {
+        if (ticksPerSecond < 0) ticksPerSecond = 0;
+        if (ticksPerSecond > MAX_TICKS_PER_SECOND)
+            ticksPerSecond = MAX_TICKS_PER_SECOND;
+
+        targetVelocity = ticksPerSecond;
+        motor.setVelocity(targetVelocity);
     }
 
-    // ===== Outtake control (always PID) =====
-    public void outtake(double power) {
-        setVelocity(-Math.abs(power) * 500); // PID-controlled
-    }
-
-    // Stop motor
+    /** Stop the flywheel completely */
     public void stop() {
+        targetVelocity = 0;
         motor.setPower(0);
-        resetPID();
     }
 
-    // Reset PID terms
-    public void resetPID() {
-        integral = 0;
-        lastError = 0;
+    /** Update method (optional if velocity already being held) */
+    public void update() {
+        if (targetVelocity > 0) {
+            motor.setVelocity(targetVelocity);
+        } else {
+            motor.setPower(0);
+        }
     }
 
-    // PID velocity control with battery compensation
-    protected void setVelocity(double targetVelocity) {
-        long currentTime = System.nanoTime();
-        double deltaTime = (currentTime - lastTime) / 1e9; // seconds
-        lastTime = currentTime;
-
-        double currentVelocity = motor.getVelocity();
-        double error = targetVelocity - currentVelocity;
-
-        integral += error * deltaTime;
-        double derivative = (error - lastError) / deltaTime;
-        lastError = error;
-
-        double pidPower = kP * error + kI * integral + kD * derivative;
-
-        // Battery compensation
-        double voltageFactor = nominalVoltage / voltageSensor.getVoltage();
-        double adjustedPower = pidPower * voltageFactor;
-
-        // Clamp power
-        adjustedPower = Math.max(-1, Math.min(1, adjustedPower));
-
-        motor.setPower(adjustedPower);
-    }
-
+    /** Return the flywheel's current speed (ticks/sec) */
     public double getCurrentVelocity() {
         return motor.getVelocity();
+    }
+
+    /** Return the target velocity */
+    public double getTargetVelocity() {
+        return targetVelocity;
     }
 }

@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 @TeleOp(name = "RRTeleOp", group = "Linear OpMode")
 public class RRTeleOp extends LinearOpMode {
@@ -12,26 +11,32 @@ public class RRTeleOp extends LinearOpMode {
     private intakeMotor intakeMotor;
     private transferMotor transferMotor;
 
-
-    // Intake
+    // ----- Intake -----
     private boolean intakeRunning = false;
     private boolean lbPressedLast = false;
-    private boolean intakeReversed = false;
 
-    // Outtake
+    // ----- Outtake -----
     private boolean outtakeRunning = false;
     private boolean rbPressedLast = false;
 
-
-    // Transfer toggles
+    // ----- Transfer -----
     private boolean transferRunning = false;
     private boolean transferReversed = false;
     private boolean aPressedLast = false;
     private boolean bPressedLast = false;
 
+    // ----- Flywheel velocity control -----
+    private double targetVelocity = 1200; // initial ticks/sec
+    private static final double VELOCITY_INCREMENT = 50;
+    private static final double MIN_VELOCITY = 0;
+    private static final double MAX_VELOCITY = 1880;
+    private boolean dpadUpLast = false;
+    private boolean dpadDownLast = false;
+
     @Override
     public void runOpMode() {
 
+        // Initialize subsystems
         mecanumDrive = new CustomMecanumDrive(hardwareMap);
         outtakeMotor = new OuttakeMotor(hardwareMap);
         intakeMotor = new intakeMotor(hardwareMap);
@@ -70,47 +75,52 @@ public class RRTeleOp extends LinearOpMode {
                 transferMotor.setPower(0);
             }
 
-            // ----- INTAKE / OUTTAKE CONTROL -----
-
             // ----- INTAKE CONTROL -----
             if (gamepad2.left_bumper && !lbPressedLast) {
-                intakeRunning = !intakeRunning;   // toggle intake on/off
+                intakeRunning = !intakeRunning;
             }
             lbPressedLast = gamepad2.left_bumper;
 
             double intakePower = 0;
             if (intakeRunning) {
-                intakePower = (gamepad2.left_trigger > 0.1) ? -1.0 : 1.0;  // reverse while LT held
+                intakePower = (gamepad2.left_trigger > 0.1) ? -1.0 : 1.0; // reverse while LT held
             }
             intakeMotor.setPower(intakePower);
 
             // ----- OUTTAKE CONTROL -----
             if (gamepad2.right_bumper && !rbPressedLast) {
-                outtakeRunning = !outtakeRunning; // toggle outtake on/off
+                outtakeRunning = !outtakeRunning;
             }
             rbPressedLast = gamepad2.right_bumper;
 
-            double targetVelocity = 0;
+            // ----- D-PAD TO ADJUST VELOCITY -----
+            if (gamepad2.dpad_up && !dpadUpLast) {
+                targetVelocity += VELOCITY_INCREMENT;
+                if (targetVelocity > MAX_VELOCITY) targetVelocity = MAX_VELOCITY;
+            }
+            if (gamepad2.dpad_down && !dpadDownLast) {
+                targetVelocity -= VELOCITY_INCREMENT;
+                if (targetVelocity < MIN_VELOCITY) targetVelocity = MIN_VELOCITY;
+            }
+            dpadUpLast = gamepad2.dpad_up;
+            dpadDownLast = gamepad2.dpad_down;
+
+            // Start/stop the flywheel using PIDF
             if (outtakeRunning) {
-                double targetPower = 0.05; // same as before
-                targetVelocity = targetPower * 500;
-                outtakeMotor.setVelocity(targetVelocity);
+                outtakeMotor.start(targetVelocity);
             } else {
                 outtakeMotor.stop();
             }
-            // ----- OUTTAKE TELEMETRY -----
-            telemetry.addData("Outtake Status", outtakeRunning ? "PID Active" : "Stopped");
-            telemetry.addData("Outtake Target Vel", outtakeRunning ? targetVelocity : 0);
-            telemetry.addData("Outtake Current Vel", outtakeMotor.getCurrentVelocity());
-
+            outtakeMotor.update();
 
             // ----- TELEMETRY -----
             telemetry.addData("Drive F/S/R", "%.2f / %.2f / %.2f", forward, strafe, rotate);
+            telemetry.addData("Intake Power", intakePower);
             telemetry.addData("Transfer Power", transferMotor.getPower());
             telemetry.addData("Transfer Reversed", transferReversed);
-            telemetry.addData("Intake Power", intakeMotor.getPower());
-            telemetry.addData("Outtake Power", outtakeMotor.getCurrentVelocity());
-            telemetry.addData("Intake Reversed", intakeReversed);
+            telemetry.addData("Outtake Running", outtakeRunning);
+            telemetry.addData("Target Velocity", targetVelocity);
+            telemetry.addData("Current Velocity", outtakeMotor.getCurrentVelocity());
             telemetry.update();
         }
     }
