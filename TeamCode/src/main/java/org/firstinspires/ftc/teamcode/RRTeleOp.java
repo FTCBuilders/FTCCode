@@ -92,7 +92,7 @@ public class RRTeleOp extends LinearOpMode {
 
             double targetVelocity = 0;
             if (outtakeRunning) {
-                double targetPower = 0.67; // same as before
+                double targetPower = 0.05; // same as before
                 targetVelocity = targetPower * 500;
                 outtakeMotor.setVelocity(targetVelocity);
             } else {
