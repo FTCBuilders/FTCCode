@@ -125,14 +125,15 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
             outtakeMotor.update();
 
             // ----- TELEMETRY -----
-            telemetry.addData("Drive F/S/R", "%.2f / %.2f / %.2f", forward, strafe, rotate);
-            telemetry.addData("Reverse mode", reverseMode ? "ON (Left Trigger)" : "OFF");
             telemetry.addData("Intake", intakeOn ? "ON" : "OFF");
             telemetry.addData("Transfer", transferPressed ? "ON" : "OFF");
+            telemetry.addData("Flywheel", outtakeOn ? "ON" : "OFF");
             telemetry.addData("Flywheel Target Ticks Per Second", targetTicksPerSecond);
-            telemetry.addData("Flywheel Target", outtakeMotor.getTargetVelocity());
             telemetry.addData("Flywheel Actual", outtakeMotor.getVelocity());
+            telemetry.addLine("---------------");
             telemetry.addData("Flywheel Error", outtakeMotor.getTargetVelocity() - outtakeMotor.getVelocity());
+            telemetry.addData("Reverse mode", reverseMode ? "ON" : "OFF");
+            telemetry.addData("Drive F/S/R", "%.2f / %.2f / %.2f", forward, strafe, rotate);
             telemetry.addData("Drive Controller", driveController == gamepad1 ? "User 1 (BLUE)" : "User 2 (RED)");
             telemetry.addData("Ball Controller", ballController == gamepad1 ? "User 1 (BLUE)" : "User 2 (RED)");
             telemetry.addData("Gamepad1 ID", gamepad1.getGamepadId());
