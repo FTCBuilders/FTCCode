@@ -2,10 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.roadrunner.MecanumDrive;
-import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.ftc.Actions;
 
 // Base class: NO @Autonomous annotation, will NOT appear in driver station
 public abstract class BaseAutoOp extends LinearOpMode {
@@ -34,12 +31,12 @@ public abstract class BaseAutoOp extends LinearOpMode {
         double targetTPS = 1550;
         long stabilizeStart = System.currentTimeMillis();
         boolean stabilized = false;
-        int fireCount = 0;
+        int artifactsInRobot = 3;
 
         outtakeMotor.start(targetTPS);
         intakeMotor.setPower(-1);
 
-        while (opModeIsActive() && fireCount < 3) {
+        while (opModeIsActive() && artifactsInRobot > 0) {
             outtakeMotor.update();
             double velocity = outtakeMotor.getVelocity();
 
@@ -63,9 +60,16 @@ public abstract class BaseAutoOp extends LinearOpMode {
 
             if (stabilized) {
                 transferMotor.setPower(-1);
-                sleep(500);
+                if (artifactsInRobot == 1) {
+                    drive.setMotorPowers(1, 1, 1, 1);
+                    sleep(200);
+                    drive.setMotorPowers(-1, -1, -1, -1);
+                    sleep(300);
+                    drive.setMotorPowers(0, 0, 0, 0);
+                    sleep(4500);
+                } else sleep(500);
                 transferMotor.setPower(0);
-                fireCount++;
+                artifactsInRobot--;
                 stabilized = false;
                 sleep(1500);
             }
@@ -73,7 +77,7 @@ public abstract class BaseAutoOp extends LinearOpMode {
             sleep(250);
         }
 
-        outtakeMotor.start(0);
+        outtakeMotor.stop();
         intakeMotor.stop();
     }
 }
