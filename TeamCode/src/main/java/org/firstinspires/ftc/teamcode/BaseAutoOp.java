@@ -1,27 +1,37 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-
 import org.firstinspires.ftc.teamcode.roadrunner.MecanumDrive;
-
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ftc.Actions;
 
-@Autonomous(name = "TestingAutoOp", group = "Main")
-public class TestingAutoOp extends LinearOpMode {
+// Base class: NO @Autonomous annotation, will NOT appear in driver station
+public abstract class BaseAutoOp extends LinearOpMode {
 
-    private intakeMotor intakeMotor;
-    private transferMotor transferMotor;
-    private PIDOuttakeMotor outtakeMotor;
+    protected intakeMotor intakeMotor;
+    protected transferMotor transferMotor;
+    protected PIDOuttakeMotor outtakeMotor;
+    protected MecanumDrive drive;
 
-    public void autoShoot() {
-        // Start flywheel early
+    @Override
+    public void runOpMode() throws InterruptedException {
+        // Initialize hardware
+        drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
+        intakeMotor = new intakeMotor(hardwareMap);
+        transferMotor = new transferMotor(hardwareMap);
+        outtakeMotor = new PIDOuttakeMotor(hardwareMap);
+
+        // Call the child class's autonomous routine
+        runAuto();
+    }
+
+    // Child classes must implement this
+    protected abstract void runAuto() throws InterruptedException;
+
+    protected void autoShoot() {
         double targetTPS = 1550;
-
-        // Stabilization + dynamic target adjustment
         long stabilizeStart = System.currentTimeMillis();
         boolean stabilized = false;
         int fireCount = 0;
@@ -30,7 +40,6 @@ public class TestingAutoOp extends LinearOpMode {
         intakeMotor.setPower(-1);
 
         while (opModeIsActive() && fireCount < 3) {
-
             outtakeMotor.update();
             double velocity = outtakeMotor.getVelocity();
 
@@ -38,17 +47,15 @@ public class TestingAutoOp extends LinearOpMode {
             telemetry.addData("Actual TPS", velocity);
             telemetry.update();
 
-            // Adjust target dynamically if outside tolerance
             if (velocity < 1500) {
                 targetTPS += 50;
                 outtakeMotor.start(targetTPS);
-                stabilizeStart = System.currentTimeMillis();  // reset timer
+                stabilizeStart = System.currentTimeMillis();
             } else if (velocity > 1600) {
                 targetTPS -= 50;
                 outtakeMotor.start(targetTPS);
-                stabilizeStart = System.currentTimeMillis();  // reset timer
+                stabilizeStart = System.currentTimeMillis();
             } else {
-                // Only consider stabilized if within ±50 for 350ms
                 if (System.currentTimeMillis() - stabilizeStart > 350) {
                     stabilized = true;
                 }
@@ -66,32 +73,7 @@ public class TestingAutoOp extends LinearOpMode {
             sleep(250);
         }
 
-        // Stop flywheel
         outtakeMotor.start(0);
         intakeMotor.stop();
-    }
-
-    @Override
-    public void runOpMode() throws InterruptedException {
-
-        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
-
-        intakeMotor = new intakeMotor(hardwareMap);
-        transferMotor = new transferMotor(hardwareMap);
-        outtakeMotor = new PIDOuttakeMotor(hardwareMap);
-
-        Action initialDrive = drive.actionBuilder(new Pose2d(0, 0, 0))
-                .lineToX(72)
-                .strafeTo(new Vector2d(72, -24))
-                .turn(Math.toRadians(45))
-                .build();
-
-        waitForStart();
-        if (isStopRequested()) return;
-
-        // Drive to shooting position
-        Actions.runBlocking(initialDrive);
-
-        autoShoot();
     }
 }
