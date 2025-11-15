@@ -1,16 +1,17 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.acmerobotics.roadrunner.ftc.Actions;
-import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.acmerobotics.roadrunner.Pose2d;
 
 import org.firstinspires.ftc.teamcode.roadrunner.MecanumDrive;
-import com.acmerobotics.roadrunner.Action;
 
-@Autonomous(name = "OfficialAutoOp", group = "Main")
-public class OfficialAutoOp extends LinearOpMode {
+import com.acmerobotics.roadrunner.Vector2d;
+import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.ftc.Actions;
+
+@Autonomous(name = "TestingAutoOp", group = "Main")
+public class TestingAutoOp extends LinearOpMode {
 
     private intakeMotor intakeMotor;
     private transferMotor transferMotor;
@@ -25,8 +26,6 @@ public class OfficialAutoOp extends LinearOpMode {
         transferMotor = new transferMotor(hardwareMap);
         outtakeMotor = new PIDOuttakeMotor(hardwareMap);
 
-        double targetTPS = 1500;
-
         Action initialDrive = drive.actionBuilder(new Pose2d(0, 0, 0))
                 .lineToX(72)
                 .strafeTo(new Vector2d(72, -24))
@@ -36,48 +35,60 @@ public class OfficialAutoOp extends LinearOpMode {
         waitForStart();
         if (isStopRequested()) return;
 
-        // Flywheel starts
-        outtakeMotor.start(targetTPS);
+// Start flywheel early
+        double targetTPS = 1550;
 
-        // Initial drive
+
+// Drive to shooting position
         Actions.runBlocking(initialDrive);
 
-        // Wait for flywheel to stabilize before feeding
-        while (opModeIsActive()) {
+// Stabilization + dynamic target adjustment
+        long stabilizeStart = System.currentTimeMillis();
+        boolean stabilized = false;
+        int fireCount = 0;
+
+        outtakeMotor.start(targetTPS);
+        intakeMotor.setPower(-1);
+
+        while (opModeIsActive() && fireCount < 3) {
+
             outtakeMotor.update();
             double velocity = outtakeMotor.getVelocity();
 
             telemetry.addData("Target TPS", targetTPS);
             telemetry.addData("Actual TPS", velocity);
-            telemetry.addData("Intake Power", intakeMotor.getPower());
-            telemetry.addData("Transfer Power", transferMotor.getPower());
             telemetry.update();
 
-            // Simple ±50 tolerance
+            // Adjust target dynamically if outside tolerance
             if (velocity < 1500) {
                 targetTPS += 50;
                 outtakeMotor.start(targetTPS);
+                stabilizeStart = System.currentTimeMillis();  // reset timer
             } else if (velocity > 1600) {
                 targetTPS -= 50;
                 outtakeMotor.start(targetTPS);
+                stabilizeStart = System.currentTimeMillis();  // reset timer
             } else {
-                // Flywheel is ready → start pulsed shooting
-                int shots = 3; // number of rings to shoot
-                for (int i = 0; i < shots && opModeIsActive(); i++) {
-                    intakeMotor.setPower(-1);
-                    transferMotor.setPower(-1);
-                    sleep(1250); // feed duration per ring
-                    intakeMotor.setPower(0);
-                    transferMotor.setPower(0);
-                    sleep(625); // pause between shots
+                // Only consider stabilized if within ±50 for 350ms
+                if (System.currentTimeMillis() - stabilizeStart > 350) {
+                    stabilized = true;
                 }
-
-                // Stop shooter after all shots
-                outtakeMotor.start(0);
-                break; // exit loop, autonomous continues
             }
 
-            sleep(50); // small loop delay
+            if (stabilized) {
+                transferMotor.setPower(-1);
+                sleep(500);
+                transferMotor.setPower(0);
+                fireCount++;
+                stabilized = false;
+                sleep(1500);
+            }
+
+            sleep(250);
         }
+
+// Stop flywheel
+        outtakeMotor.start(0);
+        intakeMotor.stop();
     }
 }
