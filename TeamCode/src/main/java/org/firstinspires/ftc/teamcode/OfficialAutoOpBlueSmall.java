@@ -25,6 +25,6 @@ public class OfficialAutoOpBlueSmall extends BaseAutoOp {
         Actions.runBlocking(initialDrive);
 
         // Shoot
-        autoShoot();
+        autoShoot(1550);
     }
 }

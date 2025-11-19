@@ -22,6 +22,6 @@ public class OfficialAutoOpBig extends BaseAutoOp {
         Actions.runBlocking(initialDrive);
 
         // Shoot
-        autoShoot();
+        autoShoot(1550);
     }
 }

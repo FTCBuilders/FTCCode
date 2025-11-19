@@ -27,8 +27,7 @@ public abstract class BaseAutoOp extends LinearOpMode {
     // Child classes must implement this
     protected abstract void runAuto() throws InterruptedException;
 
-    protected void autoShoot() {
-        double targetTPS = 1550;
+    protected void autoShoot(double targetTPS) {
         long stabilizeStart = System.currentTimeMillis();
         boolean stabilized = false;
         int artifactsInRobot = 3;
@@ -44,11 +43,11 @@ public abstract class BaseAutoOp extends LinearOpMode {
             telemetry.addData("Actual TPS", velocity);
             telemetry.update();
 
-            if (velocity < 1500) {
+            if (velocity < targetTPS - 50) {
                 targetTPS += 50;
                 outtakeMotor.start(targetTPS);
                 stabilizeStart = System.currentTimeMillis();
-            } else if (velocity > 1600) {
+            } else if (velocity > targetTPS + 50) {
                 targetTPS -= 50;
                 outtakeMotor.start(targetTPS);
                 stabilizeStart = System.currentTimeMillis();

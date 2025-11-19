@@ -2,20 +2,17 @@ package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "OfficialAutoOpRedSmall", group = "Main")
-public class OfficialAutoOpRedSmall extends BaseAutoOp {
+@Autonomous(name = "OfficialAutoOpDummyFar", group = "Main")
+public class OfficialAutoOpDummyFar extends BaseAutoOp {
 
     @Override
     protected void runAuto() throws InterruptedException {
         // Define your trajectory
         Action initialDrive = drive.actionBuilder(new Pose2d(0, 0, 0))
-                .lineToX(72)
-                .strafeTo(new Vector2d(66, 24))
-                .turn(Math.toRadians(-30))
+                .lineToX(24)
                 .build();
 
         waitForStart();
@@ -25,6 +22,6 @@ public class OfficialAutoOpRedSmall extends BaseAutoOp {
         Actions.runBlocking(initialDrive);
 
         // Shoot
-        autoShoot(1550);
+        //autoShoot();
     }
 }
