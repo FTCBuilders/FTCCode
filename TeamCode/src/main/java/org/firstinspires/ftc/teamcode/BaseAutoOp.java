@@ -18,7 +18,7 @@ public abstract class BaseAutoOp extends LinearOpMode {
         drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
         intakeMotor = new intakeMotor(hardwareMap);
         transferMotor = new transferMotor(hardwareMap);
-        outtakeMotor = new PIDOuttakeMotor(hardwareMap);
+        outtakeMotor = new PIDOuttakeMotor(hardwareMap, "outtakeMotor");
 
         // Call the child class's autonomous routine
         runAuto();

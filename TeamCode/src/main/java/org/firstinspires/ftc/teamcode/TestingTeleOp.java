@@ -53,7 +53,7 @@ public class TestingTeleOp extends LinearOpMode {
         mecanumDrive = new CustomMecanumDrive(hardwareMap);
         intakeMotor = new intakeMotor(hardwareMap);
         transferMotor = new transferMotor(hardwareMap);
-        outtakeMotors = new PIDOuttakeMotors(hardwareMap);
+        outtakeMotors = new PIDOuttakeMotors(hardwareMap, "outtakeMotor", "outtakeMotor2");
         int targetTicksPerSecond = 1500;
 
         telemetry.addLine("Initialized — Ready to run");

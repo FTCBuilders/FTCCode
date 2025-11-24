@@ -12,8 +12,8 @@ public class PIDOuttakeMotor {
 
     private static final double ACHIEVABLE_MAX_TICKS_PER_SECOND = 1880.0;
 
-    public PIDOuttakeMotor(HardwareMap hardwareMap) {
-        motor = hardwareMap.get(DcMotorEx.class, "outtakeMotor");
+    public PIDOuttakeMotor(HardwareMap hardwareMap, String deviceName) {
+        motor = hardwareMap.get(DcMotorEx.class, deviceName);
         motor.setDirection(DcMotorEx.Direction.REVERSE);
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
@@ -44,7 +44,9 @@ public class PIDOuttakeMotor {
             ticksPerSecond = ACHIEVABLE_MAX_TICKS_PER_SECOND;
 
         targetTicksPerSecond = ticksPerSecond;
+        motor.setVelocity(targetTicksPerSecond);
     }
+
 
     /** Stop the flywheel */
     public void stop() {
@@ -54,11 +56,7 @@ public class PIDOuttakeMotor {
 
     /** Call this in your loop() every tick to enforce velocity */
     public void update() {
-        if (targetTicksPerSecond > 0) {
-            motor.setVelocity(targetTicksPerSecond);
-        } else {
-            motor.setPower(0);
-        }
+        motor.setVelocity(targetTicksPerSecond);
     }
 
     /** Returns current velocity in ticks/sec */

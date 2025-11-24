@@ -53,7 +53,7 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
         mecanumDrive = new CustomMecanumDrive(hardwareMap);
         intakeMotor = new intakeMotor(hardwareMap);
         transferMotor = new transferMotor(hardwareMap);
-        outtakeMotor = new PIDOuttakeMotor(hardwareMap);
+        outtakeMotor = new PIDOuttakeMotor(hardwareMap, "outtakeMotor");
         int targetTicksPerSecond = 1500;
 
         telemetry.addLine("Initialized — Ready to run");
