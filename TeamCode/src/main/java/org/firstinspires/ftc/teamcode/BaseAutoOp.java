@@ -27,13 +27,15 @@ public abstract class BaseAutoOp extends LinearOpMode {
     // Child classes must implement this
     protected abstract void runAuto() throws InterruptedException;
 
+    protected void startMotors(double targetTPS) {
+        outtakeMotor.start(targetTPS);
+        intakeMotor.setPower(-1);
+    }
+
     protected void autoShoot(double targetTPS) {
         long stabilizeStart = System.currentTimeMillis();
         boolean stabilized = false;
         int artifactsInRobot = 3;
-
-        outtakeMotor.start(targetTPS);
-        intakeMotor.setPower(-1);
 
         while (opModeIsActive() && artifactsInRobot > 0) {
             outtakeMotor.update();
@@ -65,7 +67,7 @@ public abstract class BaseAutoOp extends LinearOpMode {
                     drive.setMotorPowers(-1, -1, -1, -1);
                     sleep(300);
                     drive.setMotorPowers(0, 0, 0, 0);
-                    sleep(4500);
+                    sleep(500);
                 } else sleep(500);
                 transferMotor.setPower(0);
                 artifactsInRobot--;
@@ -75,8 +77,11 @@ public abstract class BaseAutoOp extends LinearOpMode {
 
             sleep(250);
         }
+    }
 
+    protected void stopMotors() {
         outtakeMotor.stop();
         intakeMotor.stop();
+        transferMotor.stop();
     }
 }

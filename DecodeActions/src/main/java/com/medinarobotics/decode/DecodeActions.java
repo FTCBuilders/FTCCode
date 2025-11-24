@@ -5,6 +5,9 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class DecodeActions {
 
     public static final double ROBOT_WIDTH = 18;
@@ -26,50 +29,42 @@ public class DecodeActions {
         } else if (team == Team.BLUE && startingLocation == StartingLocation.GOAL) {
             x = -58 + ROBOT_HEIGHT / 2;
             y = -58 + ROBOT_HEIGHT / 2;
-            heading = Math.toRadians(-135);
+            heading = Math.toRadians(-130);
         } else if (team == Team.RED && startingLocation == StartingLocation.GOAL) {
             x = -58 + ROBOT_HEIGHT / 2;
             y = 58 - ROBOT_HEIGHT / 2;
-            heading = Math.toRadians(135);
+            heading = Math.toRadians(130);
         }
         return new Pose2d(x, y, heading);
+    }
+
+    public Pose2d getPositionAfterShooting(Team team) {
+        int fieldSide = team.equals(Team.BLUE) ? 1 : -1;
+        return new Pose2d(-18, -18 * fieldSide, Math.toRadians(220 * fieldSide));
     }
 
     public Action getInitialAction(TrajectoryActionBuilder trajectoryActionBuilder,
                                    Team team,
                                    StartingLocation startingLocation,
                                    ShootingLocation shootingLocation) {
+
+        int fieldSide = team.equals(Team.BLUE) ? 1 : -1;
+
         if (startingLocation == StartingLocation.GOAL && shootingLocation == ShootingLocation.NEAR_FIELD_CENTER) {
             return trajectoryActionBuilder
-                    .lineToX(-18)
+                    .strafeTo(new Vector2d(-18, -18 * fieldSide))
+                    .turn(Math.toRadians(-10 * fieldSide))
                     .build();
         } else if (startingLocation == StartingLocation.SMALL_TRIANGLE && shootingLocation == ShootingLocation.NEAR_FIELD_CENTER) {
-            double heading;
-            if (team == Team.BLUE) {
-                heading = Math.toRadians(40);
-            } else {
-                heading = Math.toRadians(-40);
-            }
-
             return trajectoryActionBuilder
-                    .lineToX(-24)
-                    .turn(heading)
+                    .strafeTo(new Vector2d(-18, -18 * fieldSide))
+                    .turn(Math.toRadians(40 * fieldSide))
                     .build();
         } else if (shootingLocation == ShootingLocation.NEAR_OBELISK) {
-            double y;
-            double heading;
-            if (team == Team.BLUE) {
-                y = -13;
-                heading = Math.toRadians(45);
-            } else {
-                y = 13;
-                heading = Math.toRadians(-45);
-            }
-
             return trajectoryActionBuilder
-                    .strafeTo(new Vector2d(-55, 2 * y))
-                    .turn(heading)
-                    .strafeTo(new Vector2d(-63, y))
+                    .strafeTo(new Vector2d(-58.5, -39 * fieldSide))
+                    .turn(Math.toRadians(40 * fieldSide))
+                    .strafeTo(new Vector2d(-63, -13 * fieldSide))
                     .build();
         }
         return trajectoryActionBuilder
@@ -77,4 +72,15 @@ public class DecodeActions {
                 .build();
     }
 
+    public Action getBallCollectionAction(TrajectoryActionBuilder trajectoryActionBuilder, Team team, int ballRow) {
+        int fieldSide = team.equals(Team.BLUE) ? 1 : -1;
+
+        return trajectoryActionBuilder
+                .turn(Math.toRadians(50 * fieldSide))
+                .strafeTo(new Vector2d(-12 + ballRow * 24, -25 * fieldSide))
+                .strafeTo(new Vector2d(-12 + ballRow * 24, (ballRow == 0 ? -54 : -62) * fieldSide))
+                .strafeTo(new Vector2d(-18, -18 * fieldSide))
+                .turn(Math.toRadians(-50 * fieldSide))
+                .build();
+    }
 }
