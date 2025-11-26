@@ -1,16 +1,29 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.medinarobotics.decode.Team;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
+import com.qualcomm.robotcore.hardware.IMU;
+
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @TeleOp(name = "OfficialTeleOpTwoDrivers", group = "Linear OpMode")
 public class OfficialTeleOpTwoDrivers extends LinearOpMode {
+
+    Team team = Team.RED;
 
     private CustomMecanumDrive mecanumDrive;
     private intakeMotor intakeMotor;
     private transferMotor transferMotor;
     private PIDOuttakeMotors outtakeMotors;
+    private Limelight3A limelight;
+    private IMU imu;
+
 
     // ----- TOGGLE STATES -----
     private boolean intakeOn = false;
@@ -56,6 +69,15 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
         outtakeMotors = new PIDOuttakeMotors(hardwareMap, "outtakeMotor", "outtakeMotor2");
         int targetTicksPerSecond = 1500;
 
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(team == Team.BLUE ? 1 : 5);
+        limelight.start();
+
+        imu = hardwareMap.get(IMU.class, "imu");
+        RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                RevHubOrientationOnRobot.UsbFacingDirection.UP);
+        imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
+
         telemetry.addLine("Initialized — Ready to run");
         telemetry.update();
 
@@ -64,15 +86,29 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
         while (opModeIsActive()) {
             setupControllers();
 
-            // ----- DRIVE CONTROL -----
-            double forward = -applyDeadband(driveController.left_stick_y,0.05);
-            double strafe = applyDeadband(driveController.left_stick_x,0.05);
-            double rotate = applyDeadband(driveController.right_stick_x,0.05);
+            YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+            limelight.updateRobotOrientation(orientation.getYaw());
+            LLResult llResult = limelight.getLatestResult();
+            boolean isAprilTagVisible = llResult != null && llResult.isValid();
+            Pose3D botPose;
+            if (isAprilTagVisible) {
+                botPose = llResult.getBotpose_MT2();
+            }
 
-            if (Math.abs(forward) < 0.05 && Math.abs(strafe) < 0.05 && Math.abs(rotate) < 0.05)
-                mecanumDrive.stop();
-            else
-                mecanumDrive.setDrivePower(forward, strafe, rotate);
+            // ----- DRIVE CONTROL -----
+            double forward = 0;
+            double strafe = 0;
+            double rotate = 0;
+            if (!driveController.left_bumper || isAprilTagVisible) {
+                forward = -driveController.left_stick_y;
+                strafe = driveController.left_stick_x;
+                rotate = driveController.right_stick_x;
+            }
+
+            if (driveController.left_bumper && isAprilTagVisible) {
+                rotate = llResult.getTx() * 0.05;
+                rotate = Math.max(-1, Math.min(1, rotate));
+            }
 
             mecanumDrive.setDrivePower(forward, strafe, rotate);
 
@@ -125,6 +161,10 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
             outtakeMotors.update();
 
             // ----- TELEMETRY -----
+            telemetry.addData("Target X", !isAprilTagVisible ? "N/A" : llResult.getTx());
+            telemetry.addData("Target Y", !isAprilTagVisible ? "N/A" : llResult.getTy());
+            telemetry.addData("Target Area", !isAprilTagVisible ? "N/A" : llResult.getTa());
+            telemetry.addLine("---------------");
             telemetry.addData("Intake", intakeOn ? "ON" : "OFF");
             telemetry.addData("Transfer", transferPressed ? "ON" : "OFF");
             telemetry.addData("Flywheel", outtakeOn ? "ON" : "OFF");
@@ -138,7 +178,6 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
             telemetry.addData("Ball Controller", ballController == gamepad1 ? "User 1 (BLUE)" : "User 2 (RED)");
             telemetry.addData("Gamepad1 ID", gamepad1.getGamepadId());
             telemetry.addData("Gamepad2 ID", gamepad2.getGamepadId());
-
             telemetry.update();
         }
     }

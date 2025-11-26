@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.medinarobotics.decode.Team;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -8,12 +9,13 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.IMU;
 
-import org.firstinspires.ftc.robotcontroller.external.samples.SensorLimelight3A;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @TeleOp(name = "TestingTeleOp", group = "Linear OpMode")
 public class TestingTeleOp extends LinearOpMode {
+
+    Team team = Team.RED;
 
     private CustomMecanumDrive mecanumDrive;
     private intakeMotor intakeMotor;
@@ -68,7 +70,7 @@ public class TestingTeleOp extends LinearOpMode {
         int targetTicksPerSecond = 1500;
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(1);
+        limelight.pipelineSwitch(team == Team.BLUE ? 1 : 5);
         limelight.start();
 
         imu = hardwareMap.get(IMU.class, "imu");
@@ -84,25 +86,31 @@ public class TestingTeleOp extends LinearOpMode {
         while (opModeIsActive()) {
             setupControllers();
 
-            // ----- DRIVE CONTROL -----
-            double forward = -applyDeadband(driveController.left_stick_y,0.05);
-            double strafe = applyDeadband(driveController.left_stick_x,0.05);
-            double rotate = applyDeadband(driveController.right_stick_x,0.05);
-
-            if (Math.abs(forward) < 0.05 && Math.abs(strafe) < 0.05 && Math.abs(rotate) < 0.05)
-                mecanumDrive.stop();
-            else
-                mecanumDrive.setDrivePower(forward, strafe, rotate);
-
-            mecanumDrive.setDrivePower(forward, strafe, rotate);
-
             YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
             limelight.updateRobotOrientation(orientation.getYaw());
             LLResult llResult = limelight.getLatestResult();
+            boolean isAprilTagVisible = llResult != null && llResult.isValid();
             Pose3D botPose;
-            if (llResult != null && llResult.isValid()) {
+            if (isAprilTagVisible) {
                 botPose = llResult.getBotpose_MT2();
             }
+
+            // ----- DRIVE CONTROL -----
+            double forward = 0;
+            double strafe = 0;
+            double rotate = 0;
+            if (!driveController.left_bumper || isAprilTagVisible) {
+                forward = -driveController.left_stick_y;
+                strafe = driveController.left_stick_x;
+                rotate = driveController.right_stick_x;
+            }
+
+            if (driveController.left_bumper && isAprilTagVisible) {
+                rotate = llResult.getTx() * 0.05;
+                rotate = Math.max(-1, Math.min(1, rotate));
+            }
+
+            mecanumDrive.setDrivePower(forward, strafe, rotate);
 
             // Check if left trigger is pressed (reverse mode)
             boolean reverseMode = ballController.left_trigger > 0.1;
@@ -153,9 +161,9 @@ public class TestingTeleOp extends LinearOpMode {
             outtakeMotors.update();
 
             // ----- TELEMETRY -----
-            telemetry.addData("Target X", llResult == null || !llResult.isValid() ? "N/A" : llResult.getTx());
-            telemetry.addData("Target Y", llResult == null || !llResult.isValid() ? "N/A" : llResult.getTy());
-            telemetry.addData("Target Area", llResult == null || !llResult.isValid() ? "N/A" : llResult.getTa());
+            telemetry.addData("Target X", !isAprilTagVisible ? "N/A" : llResult.getTx());
+            telemetry.addData("Target Y", !isAprilTagVisible ? "N/A" : llResult.getTy());
+            telemetry.addData("Target Area", !isAprilTagVisible ? "N/A" : llResult.getTa());
             telemetry.addLine("---------------");
             telemetry.addData("Intake", intakeOn ? "ON" : "OFF");
             telemetry.addData("Transfer", transferPressed ? "ON" : "OFF");
