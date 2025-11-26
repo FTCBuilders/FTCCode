@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.IMU;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
@@ -35,12 +36,11 @@ public class TestingTeleOp extends LinearOpMode {
     private boolean lastDpadUp = false;
     private boolean lastDpadDown = false;
 
+    // ----- DISTANCE FROM GOAL -----
+    private double distance;
+
     Gamepad driveController;
     Gamepad ballController;
-
-    private double applyDeadband(double value, double threshold) {
-        return Math.abs(value) > threshold ? value : 0.0;
-    }
 
     private void setupControllers() {
         // Run with a single controller if the other one has not been seen yet
@@ -57,6 +57,13 @@ public class TestingTeleOp extends LinearOpMode {
             driveController = gamepad1;
             ballController = gamepad2;
         }
+    }
+
+    public double getDistanceFromTag(double Ta) {
+        double a = 31347.4; // 30665.95
+        double b = 2.007394;
+        double distance = Math.pow(a/Ta, 1.0 / b);
+        return distance;
     }
 
     @Override
@@ -87,13 +94,10 @@ public class TestingTeleOp extends LinearOpMode {
             setupControllers();
 
             YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-            limelight.updateRobotOrientation(orientation.getYaw());
+            limelight.updateRobotOrientation(orientation.getYaw(AngleUnit.DEGREES));
             LLResult llResult = limelight.getLatestResult();
             boolean isAprilTagVisible = llResult != null && llResult.isValid();
-            Pose3D botPose;
-            if (isAprilTagVisible) {
-                botPose = llResult.getBotpose_MT2();
-            }
+            distance = getDistanceFromTag(isAprilTagVisible ? llResult.getTa() : 0);
 
             // ----- DRIVE CONTROL -----
             double forward = 0;
@@ -164,6 +168,8 @@ public class TestingTeleOp extends LinearOpMode {
             telemetry.addData("Target X", !isAprilTagVisible ? "N/A" : llResult.getTx());
             telemetry.addData("Target Y", !isAprilTagVisible ? "N/A" : llResult.getTy());
             telemetry.addData("Target Area", !isAprilTagVisible ? "N/A" : llResult.getTa());
+            telemetry.addData("Botpose", !isAprilTagVisible ? "N/A" : llResult.getBotpose_MT2().toString());
+            telemetry.addData("Target Distance", !isAprilTagVisible ? "N/A" : distance);
             telemetry.addLine("---------------");
             telemetry.addData("Intake", intakeOn ? "ON" : "OFF");
             telemetry.addData("Transfer", transferPressed ? "ON" : "OFF");
