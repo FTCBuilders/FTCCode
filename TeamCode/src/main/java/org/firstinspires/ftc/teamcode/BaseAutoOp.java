@@ -63,18 +63,11 @@ public abstract class BaseAutoOp extends LinearOpMode {
 
             if (stabilized) {
                 transferMotor.setPower(-1);
-                if (artifactsInRobot == 1) {
-                    drive.setMotorPowers(1, 1, 1, 1);
-                    sleep(200);
-                    drive.setMotorPowers(-1, -1, -1, -1);
-                    sleep(300);
-                    drive.setMotorPowers(0, 0, 0, 0);
-                    sleep(500);
-                } else sleep(500);
+                sleep(500);
                 transferMotor.setPower(0);
                 artifactsInRobot--;
                 stabilized = false;
-                sleep(1500);
+                sleep(200);
             }
 
             sleep(250);
