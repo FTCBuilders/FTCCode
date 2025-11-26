@@ -18,8 +18,8 @@ public class OfficialAutonomousSmart extends BaseAutoOp {
 
         double targetTPS = 1550;
 
-        Team team = Team.BLUE;
-        StartingLocation startingLocation = StartingLocation.GOAL;
+        Team team = Team.RED;
+        StartingLocation startingLocation = StartingLocation.SMALL_TRIANGLE;
         ShootingLocation shootingLocation = ShootingLocation.NEAR_FIELD_CENTER;
 
         DecodeActions decodeActions = new DecodeActions();

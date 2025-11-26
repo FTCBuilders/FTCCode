@@ -32,24 +32,26 @@ public abstract class BaseAutoOp extends LinearOpMode {
         intakeMotor.setPower(-1);
     }
 
-    protected void autoShoot(double targetTPS) {
+    protected void autoShoot(double desiredTPS) {
         long stabilizeStart = System.currentTimeMillis();
         boolean stabilized = false;
         int artifactsInRobot = 3;
+        double targetTPS = desiredTPS;
 
         while (opModeIsActive() && artifactsInRobot > 0) {
             outtakeMotor.update();
             double velocity = outtakeMotor.getVelocity();
 
-            telemetry.addData("Target TPS", targetTPS);
+            telemetry.addData("Desired TPS", desiredTPS);
             telemetry.addData("Actual TPS", velocity);
+            telemetry.addData("Target TPS", targetTPS);
             telemetry.update();
 
-            if (velocity < targetTPS - 50) {
+            if (velocity < desiredTPS - 50) {
                 targetTPS += 50;
                 outtakeMotor.start(targetTPS);
                 stabilizeStart = System.currentTimeMillis();
-            } else if (velocity > targetTPS + 50) {
+            } else if (velocity > desiredTPS + 50) {
                 targetTPS -= 50;
                 outtakeMotor.start(targetTPS);
                 stabilizeStart = System.currentTimeMillis();
