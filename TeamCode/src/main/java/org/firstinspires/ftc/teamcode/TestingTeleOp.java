@@ -1,8 +1,16 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
+import com.qualcomm.robotcore.hardware.IMU;
+
+import org.firstinspires.ftc.robotcontroller.external.samples.SensorLimelight3A;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @TeleOp(name = "TestingTeleOp", group = "Linear OpMode")
 public class TestingTeleOp extends LinearOpMode {
@@ -11,6 +19,9 @@ public class TestingTeleOp extends LinearOpMode {
     private intakeMotor intakeMotor;
     private transferMotor transferMotor;
     private PIDOuttakeMotors outtakeMotors;
+    private Limelight3A limelight;
+    private IMU imu;
+
 
     // ----- TOGGLE STATES -----
     private boolean intakeOn = false;
@@ -56,6 +67,15 @@ public class TestingTeleOp extends LinearOpMode {
         outtakeMotors = new PIDOuttakeMotors(hardwareMap, "outtakeMotor", "outtakeMotor2");
         int targetTicksPerSecond = 1500;
 
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(1);
+        limelight.start();
+
+        imu = hardwareMap.get(IMU.class, "imu");
+        RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                RevHubOrientationOnRobot.UsbFacingDirection.UP);
+        imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
+
         telemetry.addLine("Initialized — Ready to run");
         telemetry.update();
 
@@ -75,6 +95,14 @@ public class TestingTeleOp extends LinearOpMode {
                 mecanumDrive.setDrivePower(forward, strafe, rotate);
 
             mecanumDrive.setDrivePower(forward, strafe, rotate);
+
+            YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+            limelight.updateRobotOrientation(orientation.getYaw());
+            LLResult llResult = limelight.getLatestResult();
+            Pose3D botPose;
+            if (llResult != null && llResult.isValid()) {
+                botPose = llResult.getBotpose_MT2();
+            }
 
             // Check if left trigger is pressed (reverse mode)
             boolean reverseMode = ballController.left_trigger > 0.1;
@@ -125,6 +153,10 @@ public class TestingTeleOp extends LinearOpMode {
             outtakeMotors.update();
 
             // ----- TELEMETRY -----
+            telemetry.addData("Target X", llResult == null || !llResult.isValid() ? "N/A" : llResult.getTx());
+            telemetry.addData("Target Y", llResult == null || !llResult.isValid() ? "N/A" : llResult.getTy());
+            telemetry.addData("Target Area", llResult == null || !llResult.isValid() ? "N/A" : llResult.getTa());
+            telemetry.addLine("---------------");
             telemetry.addData("Intake", intakeOn ? "ON" : "OFF");
             telemetry.addData("Transfer", transferPressed ? "ON" : "OFF");
             telemetry.addData("Flywheel", outtakeOn ? "ON" : "OFF");
@@ -138,7 +170,6 @@ public class TestingTeleOp extends LinearOpMode {
             telemetry.addData("Ball Controller", ballController == gamepad1 ? "User 1 (BLUE)" : "User 2 (RED)");
             telemetry.addData("Gamepad1 ID", gamepad1.getGamepadId());
             telemetry.addData("Gamepad2 ID", gamepad2.getGamepadId());
-
             telemetry.update();
         }
     }

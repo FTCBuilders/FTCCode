@@ -10,7 +10,7 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
     private CustomMecanumDrive mecanumDrive;
     private intakeMotor intakeMotor;
     private transferMotor transferMotor;
-    private PIDOuttakeMotor outtakeMotor;
+    private PIDOuttakeMotors outtakeMotors;
 
     // ----- TOGGLE STATES -----
     private boolean intakeOn = false;
@@ -53,7 +53,7 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
         mecanumDrive = new CustomMecanumDrive(hardwareMap);
         intakeMotor = new intakeMotor(hardwareMap);
         transferMotor = new transferMotor(hardwareMap);
-        outtakeMotor = new PIDOuttakeMotor(hardwareMap, "outtakeMotor");
+        outtakeMotors = new PIDOuttakeMotors(hardwareMap, "outtakeMotor", "outtakeMotor2");
         int targetTicksPerSecond = 1500;
 
         telemetry.addLine("Initialized — Ready to run");
@@ -117,21 +117,21 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
             lastOuttakeButton = currentOuttakeButton;
 
             if (outtakeOn) {
-                outtakeMotor.start(targetTicksPerSecond);
+                outtakeMotors.start(targetTicksPerSecond);
             } else {
-                outtakeMotor.stop();
+                outtakeMotors.stop();
             }
 
-            outtakeMotor.update();
+            outtakeMotors.update();
 
             // ----- TELEMETRY -----
             telemetry.addData("Intake", intakeOn ? "ON" : "OFF");
             telemetry.addData("Transfer", transferPressed ? "ON" : "OFF");
             telemetry.addData("Flywheel", outtakeOn ? "ON" : "OFF");
             telemetry.addData("Flywheel Target Ticks Per Second", targetTicksPerSecond);
-            telemetry.addData("Flywheel Actual", outtakeMotor.getVelocity());
+            telemetry.addData("Flywheel Actual", outtakeMotors.getAverageVelocity());
             telemetry.addLine("---------------");
-            telemetry.addData("Flywheel Error", outtakeMotor.getTargetVelocity() - outtakeMotor.getVelocity());
+            telemetry.addData("Flywheel Error", outtakeMotors.getTargetVelocity() - outtakeMotors.getAverageVelocity());
             telemetry.addData("Reverse mode", reverseMode ? "ON" : "OFF");
             telemetry.addData("Drive F/S/R", "%.2f / %.2f / %.2f", forward, strafe, rotate);
             telemetry.addData("Drive Controller", driveController == gamepad1 ? "User 1 (BLUE)" : "User 2 (RED)");
