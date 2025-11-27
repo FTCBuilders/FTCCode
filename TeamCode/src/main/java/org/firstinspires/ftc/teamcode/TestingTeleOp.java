@@ -103,13 +103,13 @@ public class TestingTeleOp extends LinearOpMode {
             double forward = 0;
             double strafe = 0;
             double rotate = 0;
-            if (!driveController.left_bumper || isAprilTagVisible) {
+            if (!driveController.left_bumper || !isAprilTagVisible) {
+                // traveling
                 forward = -driveController.left_stick_y;
                 strafe = driveController.left_stick_x;
                 rotate = driveController.right_stick_x;
-            }
-
-            if (driveController.left_bumper && isAprilTagVisible) {
+            } else {
+                // aiming
                 rotate = llResult.getTx() * 0.05;
                 rotate = Math.max(-1, Math.min(1, rotate));
             }

@@ -15,6 +15,13 @@ import com.medinarobotics.decode.DecodeActions;
 public class OfficialAutoOpBig extends BaseAutoOp {
 
     @Override
+    protected void configure() {
+        team = Team.BLUE;
+        startingLocation = StartingLocation.GOAL;
+        shootingLocation = ShootingLocation.NEAR_FIELD_CENTER;
+    }
+
+    @Override
     protected void runAuto() throws InterruptedException {
         // Define your trajectory
         Team team = Team.BLUE;

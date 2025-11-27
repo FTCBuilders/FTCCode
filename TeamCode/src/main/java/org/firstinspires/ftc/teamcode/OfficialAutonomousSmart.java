@@ -14,11 +14,17 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 public class OfficialAutonomousSmart extends BaseAutoOp {
 
     @Override
+    protected void configure() {
+        team = Team.BLUE;
+        startingLocation = StartingLocation.GOAL;
+        shootingLocation = ShootingLocation.NEAR_FIELD_CENTER;
+    }
+
+    @Override
     protected void runAuto() throws InterruptedException {
 
         double targetTPS = 1550;
 
-        Team team = Team.RED;
         StartingLocation startingLocation = StartingLocation.SMALL_TRIANGLE;
         ShootingLocation shootingLocation = ShootingLocation.NEAR_FIELD_CENTER;
 

@@ -506,4 +506,25 @@ public final class MecanumDrive {
         rightFront.setPower(rightFrontPower);
     }
 
+    public void setDrivePower(double forward, double strafe, double rotate) {
+        double fl = forward + strafe + rotate;
+        double fr = forward  - strafe - rotate;
+        double bl = forward - strafe + rotate;
+        double br = forward + strafe - rotate;
+
+        double max = Math.max(Math.abs(fl), Math.max(Math.abs(fr),
+                Math.max(Math.abs(bl), Math.abs(br))));
+        if (max > 1.0) {
+            fl /= max;
+            fr /= max;
+            bl /= max;
+            br /= max;
+        }
+
+        leftFront.setPower(fl);
+        rightFront.setPower(fr);
+        leftBack.setPower(bl);
+        rightBack.setPower(br);
+    }
+
 }
