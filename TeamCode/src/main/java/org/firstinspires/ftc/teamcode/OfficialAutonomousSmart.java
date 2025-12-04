@@ -4,7 +4,6 @@ import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.ftc.Actions;
-import com.medinarobotics.decode.DecodeActions;
 import com.medinarobotics.decode.ShootingLocation;
 import com.medinarobotics.decode.StartingLocation;
 import com.medinarobotics.decode.Team;
@@ -16,7 +15,7 @@ public class OfficialAutonomousSmart extends BaseAutoOp {
     @Override
     protected void configure() {
         team = Team.BLUE;
-        startingLocation = StartingLocation.GOAL;
+        startingLocation = StartingLocation.SMALL_TRIANGLE;
         shootingLocation = ShootingLocation.NEAR_FIELD_CENTER;
     }
 
@@ -24,11 +23,6 @@ public class OfficialAutonomousSmart extends BaseAutoOp {
     protected void runAuto() throws InterruptedException {
 
         double targetTPS = 1550;
-
-        StartingLocation startingLocation = StartingLocation.SMALL_TRIANGLE;
-        ShootingLocation shootingLocation = ShootingLocation.NEAR_FIELD_CENTER;
-
-        DecodeActions decodeActions = new DecodeActions();
 
         waitForStart();
         if (isStopRequested()) return;
@@ -55,9 +49,10 @@ public class OfficialAutonomousSmart extends BaseAutoOp {
         autoShoot(targetTPS);
 
         Pose2d positionAfterShooting = decodeActions.getPositionAfterShooting(team);
-        TrajectoryActionBuilder trajectoryActionBuilderAfterShooting = drive.actionBuilder(positionAfterShooting);
 
         for (int i=0;i<3;i++) {
+            TrajectoryActionBuilder trajectoryActionBuilderAfterShooting = drive.actionBuilder(positionAfterShooting);
+
             Action getBallRow = decodeActions.getBallCollectionAction(trajectoryActionBuilderAfterShooting, team, i);
             Actions.runBlocking(getBallRow);
             autoShoot(targetTPS);

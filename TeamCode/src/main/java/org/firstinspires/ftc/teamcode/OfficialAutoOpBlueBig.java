@@ -33,8 +33,7 @@ public class OfficialAutoOpBlueBig extends BaseAutoOp {
 
         // Shoot
         autoShoot(1550);
-        drive.setMotorPowers(0.5, -0.5, 0.5, -0.5);
-        sleep(1000);
-        drive.setMotorPowers(0, 0, 0, 0);
+
+        // TODO: Move out of triangle after shooting
     }
 }

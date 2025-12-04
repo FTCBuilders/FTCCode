@@ -22,8 +22,8 @@ import java.util.List;
 
 public class MeepMeepTesting {
     public static void main(String[] args) {
-        Team team = Team.RED;
-        StartingLocation startingLocation = StartingLocation.SMALL_TRIANGLE;
+        Team team = Team.BLUE;
+        StartingLocation startingLocation = StartingLocation.GOAL;
         ShootingLocation shootingLocation = ShootingLocation.NEAR_FIELD_CENTER;
 
         MeepMeep meepMeep = new MeepMeep(800);
