@@ -65,7 +65,7 @@ public final class MecanumDrive {
         // drive model parameters
         public double inPerTick = 0.0023008341;
         public double lateralInPerTick = 0.001853722539401832;
-        public double trackWidthTicks = 7472.462939387452;
+        public double trackWidthTicks = 7472.462939387452 * 0.92;
 
         // feedforward parameters (in tick units)
         public double kS = 1.1648925420771006;
@@ -496,35 +496,6 @@ public final class MecanumDrive {
                 defaultTurnConstraints,
                 defaultVelConstraint, defaultAccelConstraint
         );
-    }
-
-    public void setMotorPowers(double leftFrontPower, double leftBackPower,
-                               double rightBackPower, double rightFrontPower) {
-        leftFront.setPower(leftFrontPower);
-        leftBack.setPower(leftBackPower);
-        rightBack.setPower(rightBackPower);
-        rightFront.setPower(rightFrontPower);
-    }
-
-    public void setDrivePower(double forward, double strafe, double rotate) {
-        double fl = forward + strafe + rotate;
-        double fr = forward  - strafe - rotate;
-        double bl = forward - strafe + rotate;
-        double br = forward + strafe - rotate;
-
-        double max = Math.max(Math.abs(fl), Math.max(Math.abs(fr),
-                Math.max(Math.abs(bl), Math.abs(br))));
-        if (max > 1.0) {
-            fl /= max;
-            fr /= max;
-            bl /= max;
-            br /= max;
-        }
-
-        leftFront.setPower(fl);
-        rightFront.setPower(fr);
-        leftBack.setPower(bl);
-        rightBack.setPower(br);
     }
 
 }
