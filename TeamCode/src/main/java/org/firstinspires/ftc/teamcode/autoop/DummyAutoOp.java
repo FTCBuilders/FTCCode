@@ -11,7 +11,7 @@ import com.medinarobotics.decode.Team;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 @Autonomous(name = "OfficialAutoOpDummyFar", group = "Main")
-public class OfficialAutoOpDummy extends BaseAutoOp {
+public class DummyAutoOp extends BaseAutoOp {
 
     @Override
     protected void configure() {
