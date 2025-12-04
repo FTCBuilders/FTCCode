@@ -40,7 +40,7 @@ public class DecodeActions {
 
     public Pose2d getPositionAfterShooting(Team team) {
         int fieldSide = team.equals(Team.BLUE) ? 1 : -1;
-        return new Pose2d(-18, -18 * fieldSide, Math.toRadians(220 * fieldSide));
+        return new Pose2d(-6, -18 * fieldSide, Math.toRadians(220 * fieldSide));
     }
 
     public Action getInitialAction(TrajectoryActionBuilder trajectoryActionBuilder,
@@ -52,12 +52,12 @@ public class DecodeActions {
 
         if (startingLocation == StartingLocation.GOAL && shootingLocation == ShootingLocation.NEAR_FIELD_CENTER) {
             return trajectoryActionBuilder
-                    .strafeTo(new Vector2d(-18, -18 * fieldSide))
+                    .strafeTo(new Vector2d(-6, -18 * fieldSide))
                     .turn(Math.toRadians(-10 * fieldSide))
                     .build();
         } else if (startingLocation == StartingLocation.SMALL_TRIANGLE && shootingLocation == ShootingLocation.NEAR_FIELD_CENTER) {
             return trajectoryActionBuilder
-                    .strafeTo(new Vector2d(-18, -18 * fieldSide))
+                    .strafeTo(new Vector2d(-6, -18 * fieldSide))
                     .turn(Math.toRadians(40 * fieldSide))
                     .build();
         } else if (shootingLocation == ShootingLocation.NEAR_OBELISK) {
@@ -78,8 +78,8 @@ public class DecodeActions {
         return trajectoryActionBuilder
                 .turn(Math.toRadians(50 * fieldSide))
                 .strafeTo(new Vector2d(-12 + ballRow * 24, -25 * fieldSide))
-                .strafeTo(new Vector2d(-12 + ballRow * 24, (ballRow == 0 ? -54 : -62) * fieldSide))
-                .strafeTo(new Vector2d(-18, -18 * fieldSide))
+                .strafeTo(new Vector2d(-12 + ballRow * 24, (ballRow == 0 ? -56 : -62) * fieldSide))
+                .strafeTo(new Vector2d(-6, -18 * fieldSide))
                 .turn(Math.toRadians(-50 * fieldSide))
                 .build();
     }
