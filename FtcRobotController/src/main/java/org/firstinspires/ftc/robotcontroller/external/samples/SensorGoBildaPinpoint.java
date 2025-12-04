@@ -41,7 +41,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
  * See the sensor's product page: https://www.gobilda.com/pinpoint-odometry-computer-imu-sensor-fusion-for-2-wheel-odometry/
  */
 @TeleOp(name = "Sensor: GoBilda Pinpoint", group = "Sensor")
-@Disabled
+//@Disabled
 public class SensorGoBildaPinpoint extends OpMode {
     // Create an instance of the sensor
     GoBildaPinpointDriver pinpoint;
@@ -55,7 +55,9 @@ public class SensorGoBildaPinpoint extends OpMode {
         configurePinpoint();
 
         // Set the location of the robot - this should be the place you are starting the robot from
-        pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, 0));
+        pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, -130));
+        pinpoint.setHeading(-130, AngleUnit.DEGREES);
+        telemetry.addData("heading", pinpoint.getHeading(AngleUnit.DEGREES));
     }
 
     @Override
@@ -64,7 +66,7 @@ public class SensorGoBildaPinpoint extends OpMode {
         telemetry.addLine("Press A to reset the position");
         if(gamepad1.a){
             // You could use readings from April Tags here to give a new known position to the pinpoint
-            pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, 0));
+            pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, -130));
         }
         pinpoint.update();
         Pose2D pose2D = pinpoint.getPosition();
