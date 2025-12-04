@@ -1,16 +1,19 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.ftc.Actions;
+import com.medinarobotics.decode.DecodeActions;
 import com.medinarobotics.decode.ShootingLocation;
 import com.medinarobotics.decode.StartingLocation;
 import com.medinarobotics.decode.Team;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.roadrunner.MecanumDrive;
+
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.hardware.IMU;
 
@@ -28,9 +31,13 @@ public abstract class BaseAutoOp extends LinearOpMode {
     protected StartingLocation startingLocation;
     protected ShootingLocation shootingLocation;
 
+    protected DecodeActions decodeActions;
+
     @Override
     public void runOpMode() throws InterruptedException {
         configure();
+
+        decodeActions = new DecodeActions();
 
         // Initialize hardware
         drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
@@ -40,12 +47,12 @@ public abstract class BaseAutoOp extends LinearOpMode {
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(team == Team.BLUE ? 1 : 5);
+        telemetry.addData("pipeline", team == Team.BLUE ? 1 : 5);
         limelight.start();
 
-        imu = hardwareMap.get(IMU.class, "imu");
-        RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                RevHubOrientationOnRobot.UsbFacingDirection.UP);
-        imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
+        imu = drive.lazyImu.get();
+
+        Pose2d initialLocation = decodeActions.getInitialPosition(team, startingLocation);
 
         // Call the child class's autonomous routine
         runAuto();
@@ -70,18 +77,40 @@ public abstract class BaseAutoOp extends LinearOpMode {
     }
 
     protected void aim() {
-        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-        limelight.updateRobotOrientation(orientation.getYaw(AngleUnit.DEGREES));
-        LLResult llResult = limelight.getLatestResult();
-        boolean isAprilTagVisible = llResult != null && llResult.isValid();
-        double distance = getDistanceFromTag(isAprilTagVisible ? llResult.getTa() : 0);
+        int retries = 0;
 
-        double rotate = llResult.getTx() * 0.05;
-        rotate = Math.max(-1, Math.min(1, rotate));
+        while (true) {
+            YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+            limelight.updateRobotOrientation(orientation.getYaw(AngleUnit.DEGREES));
+            LLResult llResult = limelight.getLatestResult();
+            boolean isAprilTagVisible = llResult != null && llResult.isValid();
+            telemetry.addData("AprilTag visible", isAprilTagVisible);
 
+            retries = isAprilTagVisible ? 0 : retries + 1;
+            if (retries > 10) {
+                break;
+            }
+            if (!isAprilTagVisible) {
+                continue;
+            }
 
-        telemetry.addData("Aiming Rotation", rotate);
-        drive.setDrivePower(0, 0, rotate);
+            double rotate = llResult.getTx() * -1 * 0.2;
+            double rotateRadians = Math.toRadians(rotate);
+            rotateRadians = Math.max(Math.toRadians(-20), Math.min(Math.toRadians(20), rotateRadians));
+            if (Math.abs(rotateRadians) < 1e-3) {   // ~0.001 rad (~0.06°)
+                break;
+            }
+
+            // TODO Get current position from pinpoint
+            Pose2d position = decodeActions.getPositionAfterShooting(team);
+            Action action = drive.actionBuilder(position).turn(rotateRadians).build();
+            Actions.runBlocking(action);
+
+            // double distance = getDistanceFromTag(isAprilTagVisible ? llResult.getTa() : 0);
+
+            telemetry.update();
+            sleep(250);
+        }
     }
 
     protected void autoShoot(double desiredTPS) {
