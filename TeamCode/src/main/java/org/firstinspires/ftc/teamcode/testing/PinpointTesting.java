@@ -1,11 +1,9 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.testing;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
-import com.acmerobotics.roadrunner.Vector2d;
 import com.medinarobotics.decode.DecodeActions;
 import com.medinarobotics.decode.ShootingLocation;
 import com.medinarobotics.decode.StartingLocation;
@@ -13,7 +11,6 @@ import com.medinarobotics.decode.Team;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.roadrunner.MecanumDrive;
-import org.firstinspires.ftc.teamcode.roadrunner.PinpointLocalizer;
 
 @Autonomous(name="PinpointTesting", group = "Main")
 public class PinpointTesting extends LinearOpMode {

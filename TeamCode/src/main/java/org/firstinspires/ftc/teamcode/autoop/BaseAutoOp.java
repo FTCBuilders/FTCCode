@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.autoop;
 
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
@@ -13,6 +13,9 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.motors.IntakeMotor;
+import org.firstinspires.ftc.teamcode.motors.PIDOuttakeMotor;
+import org.firstinspires.ftc.teamcode.motors.TransferMotor;
 import org.firstinspires.ftc.teamcode.roadrunner.MecanumDrive;
 
 import com.acmerobotics.roadrunner.Pose2d;

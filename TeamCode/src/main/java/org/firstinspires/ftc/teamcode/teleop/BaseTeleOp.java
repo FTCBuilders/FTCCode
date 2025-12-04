@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.teleop;
 
 import com.medinarobotics.decode.Team;
 import com.qualcomm.hardware.limelightvision.LLResult;
@@ -10,6 +10,10 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.motors.CustomMecanumDrive;
+import org.firstinspires.ftc.teamcode.motors.IntakeMotor;
+import org.firstinspires.ftc.teamcode.motors.PIDOuttakeMotors;
+import org.firstinspires.ftc.teamcode.motors.TransferMotor;
 
 public abstract class BaseTeleOp extends LinearOpMode {
 
