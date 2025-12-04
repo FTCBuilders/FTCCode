@@ -34,6 +34,7 @@ public abstract class BaseAutoOp extends LinearOpMode {
     protected Team team;
     protected StartingLocation startingLocation;
     protected ShootingLocation shootingLocation;
+    protected boolean getBallRows = true;
 
     protected DecodeActions decodeActions;
 
@@ -64,7 +65,7 @@ public abstract class BaseAutoOp extends LinearOpMode {
 
     protected void runAuto() throws InterruptedException {
 
-        double targetTPS = shootingLocation == ShootingLocation.NEAR_FIELD_CENTER ? 1550 : 1700;
+        double targetTPS = 1550;
 
         waitForStart();
         if (isStopRequested()) return;
@@ -90,17 +91,19 @@ public abstract class BaseAutoOp extends LinearOpMode {
 
         autoShoot(targetTPS);
 
-        // TODO: Get current position from pinpoint
-        Pose2d positionAfterShooting = decodeActions.getPositionAfterShooting(team);
+        if (getBallRows) {
 
-        for (int i=0;i<3;i++) {
-            TrajectoryActionBuilder trajectoryActionBuilderAfterShooting = drive.actionBuilder(positionAfterShooting);
+            // TODO: Get current position from pinpoint
+            Pose2d positionAfterShooting = decodeActions.getPositionAfterShooting(team);
 
-            Action getBallRow = decodeActions.getBallCollectionAction(trajectoryActionBuilderAfterShooting, team, i);
-            Actions.runBlocking(getBallRow);
-            autoShoot(targetTPS);
+            for (int i = 0; i < 3; i++) {
+                TrajectoryActionBuilder trajectoryActionBuilderAfterShooting = drive.actionBuilder(positionAfterShooting);
+
+                Action getBallRow = decodeActions.getBallCollectionAction(trajectoryActionBuilderAfterShooting, team, i);
+                Actions.runBlocking(getBallRow);
+                autoShoot(targetTPS);
+            }
         }
-
         stopMotors();
     }
 

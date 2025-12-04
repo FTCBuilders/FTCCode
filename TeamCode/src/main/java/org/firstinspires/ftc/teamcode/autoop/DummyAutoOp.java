@@ -10,7 +10,7 @@ import com.medinarobotics.decode.StartingLocation;
 import com.medinarobotics.decode.Team;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "OfficialAutoOpDummyFar", group = "Main")
+@Autonomous(name = "DummyAutoOp", group = "Main")
 public class DummyAutoOp extends BaseAutoOp {
 
     @Override
@@ -22,7 +22,6 @@ public class DummyAutoOp extends BaseAutoOp {
 
     @Override
     protected void runAuto() throws InterruptedException {
-        // Define your trajectory
         Action initialDrive = drive.actionBuilder(new Pose2d(0, 0, 0))
                 .lineToX(24)
                 .build();
@@ -30,11 +29,7 @@ public class DummyAutoOp extends BaseAutoOp {
         waitForStart();
         if (isStopRequested()) return;
 
-        // Execute trajectory
         Actions.runBlocking(initialDrive);
         drive.setDrivePowers(new PoseVelocity2d(new Vector2d(0, 0), 0));
-
-        // Shoot
-        //autoShoot();
     }
 }
