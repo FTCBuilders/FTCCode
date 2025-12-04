@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.medinarobotics.decode.DecodeActions;
 import com.medinarobotics.decode.ShootingLocation;
@@ -58,8 +59,47 @@ public abstract class BaseAutoOp extends LinearOpMode {
         runAuto();
     }
 
-    // Child classes must implement this
-    protected abstract void runAuto() throws InterruptedException;
+    protected void runAuto() throws InterruptedException {
+
+        double targetTPS = shootingLocation == ShootingLocation.NEAR_FIELD_CENTER ? 1550 : 1700;
+
+        waitForStart();
+        if (isStopRequested()) return;
+
+        startMotors(targetTPS);
+
+        // Keep flywheel updated while driving
+        Thread flywheelThread = new Thread(() -> {
+            while (opModeIsActive()) {
+                outtakeMotor.update();
+                try { Thread.sleep(20); } catch (Exception ignored) {}
+            }
+        });
+        flywheelThread.start();
+
+        Pose2d initialPosition = decodeActions.getInitialPosition(team, startingLocation);
+        TrajectoryActionBuilder trajectoryActionBuilder = drive.actionBuilder(initialPosition);
+
+        Action initialDrive = decodeActions.getInitialAction(trajectoryActionBuilder, team,
+                startingLocation, shootingLocation);
+
+        Actions.runBlocking(initialDrive);
+
+        autoShoot(targetTPS);
+
+        // TODO: Get current position from pinpoint
+        Pose2d positionAfterShooting = decodeActions.getPositionAfterShooting(team);
+
+        for (int i=0;i<3;i++) {
+            TrajectoryActionBuilder trajectoryActionBuilderAfterShooting = drive.actionBuilder(positionAfterShooting);
+
+            Action getBallRow = decodeActions.getBallCollectionAction(trajectoryActionBuilderAfterShooting, team, i);
+            Actions.runBlocking(getBallRow);
+            autoShoot(targetTPS);
+        }
+
+        stopMotors();
+    }
 
     // Child classes must implement this
     protected abstract void configure();
