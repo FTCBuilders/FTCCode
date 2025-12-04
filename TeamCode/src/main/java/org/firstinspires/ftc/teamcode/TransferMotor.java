@@ -3,10 +3,10 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 
-public class transferMotor {
+public class TransferMotor {
     private DcMotor transferMotor;
 
-    public transferMotor(HardwareMap hardwareMap) {
+    public TransferMotor(HardwareMap hardwareMap) {
         transferMotor = hardwareMap.get(DcMotor.class, "transferMotor");
         transferMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 

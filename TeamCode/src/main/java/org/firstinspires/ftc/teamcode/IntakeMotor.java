@@ -3,12 +3,12 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-public class intakeMotor {
+public class IntakeMotor {
 
     private final DcMotor motor;
 
 
-    public intakeMotor(HardwareMap hardwareMap) {
+    public IntakeMotor(HardwareMap hardwareMap) {
         motor = hardwareMap.get(DcMotor.class, "intakeMotor");
         motor.setDirection(DcMotor.Direction.FORWARD);
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);

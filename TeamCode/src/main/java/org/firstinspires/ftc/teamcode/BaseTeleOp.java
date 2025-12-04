@@ -5,7 +5,6 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.IMU;
 
@@ -17,8 +16,8 @@ public abstract class BaseTeleOp extends LinearOpMode {
     Team team;
 
     private CustomMecanumDrive mecanumDrive;
-    private intakeMotor intakeMotor;
-    private transferMotor transferMotor;
+    private IntakeMotor intakeMotor;
+    private TransferMotor transferMotor;
     private PIDOuttakeMotors outtakeMotors;
     private Limelight3A limelight;
     private IMU imu;
@@ -63,8 +62,8 @@ public abstract class BaseTeleOp extends LinearOpMode {
 
         // Initialize subsystems
         mecanumDrive = new CustomMecanumDrive(hardwareMap);
-        intakeMotor = new intakeMotor(hardwareMap);
-        transferMotor = new transferMotor(hardwareMap);
+        intakeMotor = new IntakeMotor(hardwareMap);
+        transferMotor = new TransferMotor(hardwareMap);
         outtakeMotors = new PIDOuttakeMotors(hardwareMap, "outtakeMotor", "outtakeMotor2");
         int targetTicksPerSecond = 1500;
 

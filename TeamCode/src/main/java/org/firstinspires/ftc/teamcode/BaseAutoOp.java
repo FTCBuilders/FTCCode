@@ -20,8 +20,8 @@ import com.qualcomm.robotcore.hardware.IMU;
 // Base class: NO @Autonomous annotation, will NOT appear in driver station
 public abstract class BaseAutoOp extends LinearOpMode {
 
-    protected intakeMotor intakeMotor;
-    protected transferMotor transferMotor;
+    protected IntakeMotor intakeMotor;
+    protected TransferMotor transferMotor;
     protected PIDOuttakeMotor outtakeMotor;
     protected MecanumDrive drive;
     private Limelight3A limelight;
@@ -41,8 +41,8 @@ public abstract class BaseAutoOp extends LinearOpMode {
 
         // Initialize hardware
         drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
-        intakeMotor = new intakeMotor(hardwareMap);
-        transferMotor = new transferMotor(hardwareMap);
+        intakeMotor = new IntakeMotor(hardwareMap);
+        transferMotor = new TransferMotor(hardwareMap);
         outtakeMotor = new PIDOuttakeMotor(hardwareMap, "outtakeMotor");
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");

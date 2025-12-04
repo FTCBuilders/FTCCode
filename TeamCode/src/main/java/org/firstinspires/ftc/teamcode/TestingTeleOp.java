@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @TeleOp(name = "TestingTeleOp", group = "Linear OpMode")
@@ -19,8 +18,8 @@ public class TestingTeleOp extends LinearOpMode {
     Team team = Team.RED;
 
     private CustomMecanumDrive mecanumDrive;
-    private intakeMotor intakeMotor;
-    private transferMotor transferMotor;
+    private IntakeMotor intakeMotor;
+    private TransferMotor transferMotor;
     private PIDOuttakeMotors outtakeMotors;
     private Limelight3A limelight;
     private IMU imu;
@@ -71,8 +70,8 @@ public class TestingTeleOp extends LinearOpMode {
 
         // Initialize subsystems
         mecanumDrive = new CustomMecanumDrive(hardwareMap);
-        intakeMotor = new intakeMotor(hardwareMap);
-        transferMotor = new transferMotor(hardwareMap);
+        intakeMotor = new IntakeMotor(hardwareMap);
+        transferMotor = new TransferMotor(hardwareMap);
         outtakeMotors = new PIDOuttakeMotors(hardwareMap, "outtakeMotor", "outtakeMotor2");
         int targetTicksPerSecond = 1500;
 
