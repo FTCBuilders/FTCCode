@@ -12,10 +12,9 @@ import com.qualcomm.robotcore.hardware.IMU;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
-@TeleOp(name = "OfficialTeleOpTwoDrivers", group = "Linear OpMode")
-public class OfficialTeleOpTwoDrivers extends LinearOpMode {
+public abstract class BaseTeleOp extends LinearOpMode {
 
-    Team team = Team.RED;
+    Team team;
 
     private CustomMecanumDrive mecanumDrive;
     private intakeMotor intakeMotor;
@@ -38,9 +37,7 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
     Gamepad driveController;
     Gamepad ballController;
 
-    private double applyDeadband(double value, double threshold) {
-        return Math.abs(value) > threshold ? value : 0.0;
-    }
+    protected abstract void configure();
 
     private void setupControllers() {
         // Run with a single controller if the other one has not been seen yet
@@ -61,6 +58,8 @@ public class OfficialTeleOpTwoDrivers extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+
+        configure();
 
         // Initialize subsystems
         mecanumDrive = new CustomMecanumDrive(hardwareMap);
