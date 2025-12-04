@@ -25,6 +25,7 @@ public class MeepMeepTesting {
         Team team = Team.BLUE;
         StartingLocation startingLocation = StartingLocation.GOAL;
         ShootingLocation shootingLocation = ShootingLocation.NEAR_FIELD_CENTER;
+        boolean getBallRows = true;
 
         MeepMeep meepMeep = new MeepMeep(800);
         DecodeActions decodeActions = new DecodeActions();
@@ -42,16 +43,20 @@ public class MeepMeepTesting {
         Action initialDrive = decodeActions.getInitialAction(trajectoryActionBuilder, team,
                 startingLocation, shootingLocation);
 
-        Pose2d positionAfterShooting = decodeActions.getPositionAfterShooting(team);
-        TrajectoryActionBuilder trajectoryActionBuilderAfterShooting = myBot.getDrive().actionBuilder(positionAfterShooting);
-
         List<Action> actionList = new ArrayList<>();
         actionList.add(initialDrive);
         actionList.add(new SleepAction(1));
-        for (int i=0;i<3;i++) {
-            Action getBallRowAction = decodeActions.getBallCollectionAction(trajectoryActionBuilderAfterShooting, team, i);
-            actionList.add(getBallRowAction);
-            actionList.add(new SleepAction(1));
+
+        if (getBallRows) {
+            Pose2d positionAfterShooting = decodeActions.getPositionAfterShooting(team);
+            TrajectoryActionBuilder trajectoryActionBuilderAfterShooting = myBot.getDrive().actionBuilder(positionAfterShooting);
+
+
+            for (int i=0;i<3;i++) {
+                Action getBallRowAction = decodeActions.getBallCollectionAction(trajectoryActionBuilderAfterShooting, team, i);
+                actionList.add(getBallRowAction);
+                actionList.add(new SleepAction(1));
+            }
         }
 
         Action actionSequence = new SequentialAction(actionList);
