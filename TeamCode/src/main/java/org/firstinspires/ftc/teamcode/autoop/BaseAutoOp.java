@@ -34,6 +34,8 @@ public abstract class BaseAutoOp extends LinearOpMode {
     protected Team team;
     protected StartingLocation startingLocation;
     protected ShootingLocation shootingLocation;
+
+    protected boolean isShootingFromFar;
     protected boolean getBallRows = true;
 
     protected DecodeActions decodeActions;
@@ -41,6 +43,8 @@ public abstract class BaseAutoOp extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         configure();
+
+        isShootingFromFar = shootingLocation == ShootingLocation.NEAR_SMALL_TRIANGLE;
 
         decodeActions = new DecodeActions(team, startingLocation, shootingLocation);
 
@@ -65,7 +69,7 @@ public abstract class BaseAutoOp extends LinearOpMode {
 
     protected void runAuto() throws InterruptedException {
 
-        double targetTPS = 1550;
+        double targetTPS = isShootingFromFar ? 1700 : 1550;
 
         waitForStart();
         if (isStopRequested()) return;
@@ -98,7 +102,7 @@ public abstract class BaseAutoOp extends LinearOpMode {
             for (int i = 0; i < 3; i++) {
                 TrajectoryActionBuilder trajectoryActionBuilderAfterShooting = drive.actionBuilder(positionAfterShooting);
 
-                Action getBallRow = decodeActions.getBallCollectionAction(trajectoryActionBuilderAfterShooting, i);
+                Action getBallRow = decodeActions.getBallCollectionAction(trajectoryActionBuilderAfterShooting, isShootingFromFar ? 2 - i : i);
                 Actions.runBlocking(getBallRow);
                 autoShoot(targetTPS);
             }

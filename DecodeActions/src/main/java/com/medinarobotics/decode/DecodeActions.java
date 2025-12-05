@@ -29,7 +29,7 @@ public class DecodeActions {
                 new Pose2d(new Vector2d(-6, -18 * fieldSide), Math.toRadians(220 * fieldSide)) :
                 shootingLocation == ShootingLocation.NEAR_OBELISK ?
                         new Pose2d(new Vector2d(-63, -13 * fieldSide),  Math.toRadians(-90 * fieldSide)) :
-                        new Pose2d(0, 0, 0);
+                        new Pose2d(new Vector2d(54, -18 * fieldSide), Math.toRadians(200 * fieldSide));
     }
 
     public Pose2d getInitialPosition() {
@@ -48,21 +48,17 @@ public class DecodeActions {
                     .turnTo(shootingPose.heading)
                     .strafeTo(shootingPose.position)
                     .build();
-        } else if (shootingLocation == ShootingLocation.NEAR_FIELD_CENTER) {
+        } else {
             return trajectoryActionBuilder
                     .strafeTo(shootingPose.position)
                     .turnTo(shootingPose.heading)
-                    .build();
-        } else {
-            return trajectoryActionBuilder
-                    .turn(Math.toRadians(0))
                     .build();
         }
     }
 
     public Action getBallCollectionAction(TrajectoryActionBuilder trajectoryActionBuilder, int ballRow) {
         return trajectoryActionBuilder
-                .turn(Math.toRadians(50 * fieldSide))
+                .turnTo(Math.toRadians(-90 * fieldSide))
                 .strafeTo(new Vector2d(-12 + ballRow * 24, -25 * fieldSide))
                 .strafeTo(new Vector2d(-12 + ballRow * 24, (ballRow == 0 ? -56 : -62) * fieldSide))
                 .strafeTo(shootingPose.position)

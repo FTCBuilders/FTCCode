@@ -23,7 +23,7 @@ import java.util.List;
 public class MeepMeepTesting {
     public static void main(String[] args) {
         Team team = Team.RED;
-        StartingLocation startingLocation = StartingLocation.GOAL;
+        StartingLocation startingLocation = StartingLocation.SMALL_TRIANGLE;
         ShootingLocation shootingLocation = ShootingLocation.NEAR_FIELD_CENTER;
         boolean getBallRows = true;
 
