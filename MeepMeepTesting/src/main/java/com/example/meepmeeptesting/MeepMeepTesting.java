@@ -22,13 +22,13 @@ import java.util.List;
 
 public class MeepMeepTesting {
     public static void main(String[] args) {
-        Team team = Team.BLUE;
+        Team team = Team.RED;
         StartingLocation startingLocation = StartingLocation.GOAL;
         ShootingLocation shootingLocation = ShootingLocation.NEAR_FIELD_CENTER;
         boolean getBallRows = true;
 
         MeepMeep meepMeep = new MeepMeep(800);
-        DecodeActions decodeActions = new DecodeActions();
+        DecodeActions decodeActions = new DecodeActions(team, startingLocation, shootingLocation);
 
         ColorScheme colorScheme = team == Team.BLUE ? new ColorSchemeBlueLight() : new ColorSchemeRedLight();
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
@@ -38,22 +38,21 @@ public class MeepMeepTesting {
                 .setColorScheme(colorScheme)
                 .build();
 
-        Pose2d initialPosition = decodeActions.getInitialPosition(team, startingLocation);
+        Pose2d initialPosition = decodeActions.getInitialPosition();
         TrajectoryActionBuilder trajectoryActionBuilder = myBot.getDrive().actionBuilder(initialPosition);
-        Action initialDrive = decodeActions.getInitialAction(trajectoryActionBuilder, team,
-                startingLocation, shootingLocation);
+        Action initialDrive = decodeActions.getInitialAction(trajectoryActionBuilder, shootingLocation);
 
         List<Action> actionList = new ArrayList<>();
         actionList.add(initialDrive);
         actionList.add(new SleepAction(1));
 
         if (getBallRows) {
-            Pose2d positionAfterShooting = decodeActions.getPositionAfterShooting(team);
+            Pose2d positionAfterShooting = decodeActions.getPositionAfterShooting();
             TrajectoryActionBuilder trajectoryActionBuilderAfterShooting = myBot.getDrive().actionBuilder(positionAfterShooting);
 
 
             for (int i=0;i<3;i++) {
-                Action getBallRowAction = decodeActions.getBallCollectionAction(trajectoryActionBuilderAfterShooting, team, i);
+                Action getBallRowAction = decodeActions.getBallCollectionAction(trajectoryActionBuilderAfterShooting, i);
                 actionList.add(getBallRowAction);
                 actionList.add(new SleepAction(1));
             }

@@ -27,9 +27,9 @@ public class PinpointTesting extends LinearOpMode {
         team = Team.BLUE;
         startingLocation = StartingLocation.GOAL;
         shootingLocation = ShootingLocation.NEAR_FIELD_CENTER;
-        decodeActions = new DecodeActions();
+        decodeActions = new DecodeActions(team, startingLocation, shootingLocation);
 
-        Pose2d initialPosition = decodeActions.getInitialPosition(team, startingLocation);
+        Pose2d initialPosition = decodeActions.getInitialPosition();
 
         // Init drive
         drive = new MecanumDrive(hardwareMap, initialPosition);
@@ -40,7 +40,7 @@ public class PinpointTesting extends LinearOpMode {
 
         // Build trajectory
         TrajectoryActionBuilder trajectoryActionBuilder = drive.actionBuilder(initialPosition);
-        Action initialDrive = decodeActions.getInitialAction(trajectoryActionBuilder, team, startingLocation, shootingLocation);
+        Action initialDrive = decodeActions.getInitialAction(trajectoryActionBuilder, shootingLocation);
 
         // Run trajectory manually in a loop to update Pinpoint
         boolean running = true;

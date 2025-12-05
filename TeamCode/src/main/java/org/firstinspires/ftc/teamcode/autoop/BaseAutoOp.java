@@ -42,7 +42,7 @@ public abstract class BaseAutoOp extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         configure();
 
-        decodeActions = new DecodeActions();
+        decodeActions = new DecodeActions(team, startingLocation, shootingLocation);
 
         // Initialize hardware
         drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
@@ -57,7 +57,7 @@ public abstract class BaseAutoOp extends LinearOpMode {
 
         imu = drive.lazyImu.get();
 
-        Pose2d initialLocation = decodeActions.getInitialPosition(team, startingLocation);
+        Pose2d initialLocation = decodeActions.getInitialPosition();
 
         // Call the child class's autonomous routine
         runAuto();
@@ -81,11 +81,10 @@ public abstract class BaseAutoOp extends LinearOpMode {
         });
         flywheelThread.start();
 
-        Pose2d initialPosition = decodeActions.getInitialPosition(team, startingLocation);
+        Pose2d initialPosition = decodeActions.getInitialPosition();
         TrajectoryActionBuilder trajectoryActionBuilder = drive.actionBuilder(initialPosition);
 
-        Action initialDrive = decodeActions.getInitialAction(trajectoryActionBuilder, team,
-                startingLocation, shootingLocation);
+        Action initialDrive = decodeActions.getInitialAction(trajectoryActionBuilder, shootingLocation);
 
         Actions.runBlocking(initialDrive);
 
@@ -94,12 +93,12 @@ public abstract class BaseAutoOp extends LinearOpMode {
         if (getBallRows) {
 
             // TODO: Get current position from pinpoint
-            Pose2d positionAfterShooting = decodeActions.getPositionAfterShooting(team);
+            Pose2d positionAfterShooting = decodeActions.getPositionAfterShooting();
 
             for (int i = 0; i < 3; i++) {
                 TrajectoryActionBuilder trajectoryActionBuilderAfterShooting = drive.actionBuilder(positionAfterShooting);
 
-                Action getBallRow = decodeActions.getBallCollectionAction(trajectoryActionBuilderAfterShooting, team, i);
+                Action getBallRow = decodeActions.getBallCollectionAction(trajectoryActionBuilderAfterShooting, i);
                 Actions.runBlocking(getBallRow);
                 autoShoot(targetTPS);
             }
@@ -148,7 +147,7 @@ public abstract class BaseAutoOp extends LinearOpMode {
             }
 
             // TODO Get current position from pinpoint
-            Pose2d position = decodeActions.getPositionAfterShooting(team);
+            Pose2d position = decodeActions.getPositionAfterShooting();
             Action action = drive.actionBuilder(position).turn(rotateRadians).build();
             Actions.runBlocking(action);
 
