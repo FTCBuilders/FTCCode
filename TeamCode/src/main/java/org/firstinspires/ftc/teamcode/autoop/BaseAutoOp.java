@@ -69,7 +69,7 @@ public abstract class BaseAutoOp extends LinearOpMode {
 
     protected void runAuto() throws InterruptedException {
 
-        double targetTPS = isShootingFromFar ? 1700 : 1550;
+        double targetTPS = isShootingFromFar ? 1700 : 1500;
 
         waitForStart();
         if (isStopRequested()) return;
@@ -99,14 +99,27 @@ public abstract class BaseAutoOp extends LinearOpMode {
             // TODO: Get current position from pinpoint
             Pose2d positionAfterShooting = decodeActions.getPositionAfterShooting();
 
-            for (int i = 0; i < 3; i++) {
+            /*for (int i = 0; i < 3; i++) {
                 TrajectoryActionBuilder trajectoryActionBuilderAfterShooting = drive.actionBuilder(positionAfterShooting);
 
                 Action getBallRow = decodeActions.getBallCollectionAction(trajectoryActionBuilderAfterShooting, isShootingFromFar ? 2 - i : i);
                 Actions.runBlocking(getBallRow);
                 autoShoot(targetTPS);
-            }
+            }*/
+            TrajectoryActionBuilder trajectoryActionBuilderAfterShooting = drive.actionBuilder(positionAfterShooting);
+
+            Action getBallRow = decodeActions.getBallCollectionAction(trajectoryActionBuilderAfterShooting, isShootingFromFar ? 2 : 0);
+            Actions.runBlocking(getBallRow);
+            autoShoot(targetTPS);
         }
+
+        if (shootingLocation == ShootingLocation.NEAR_FIELD_CENTER) {
+            Pose2d positionAfterShooting = decodeActions.getPositionAfterShooting();
+            TrajectoryActionBuilder trajectoryActionBuilderEnd = drive.actionBuilder(positionAfterShooting);
+            Action endAction = decodeActions.getEndAction(trajectoryActionBuilderEnd);
+            Actions.runBlocking(endAction);
+        }
+
         stopMotors();
     }
 
@@ -133,7 +146,6 @@ public abstract class BaseAutoOp extends LinearOpMode {
             limelight.updateRobotOrientation(orientation.getYaw(AngleUnit.DEGREES));
             LLResult llResult = limelight.getLatestResult();
             boolean isAprilTagVisible = llResult != null && llResult.isValid();
-            telemetry.addData("AprilTag visible", isAprilTagVisible);
 
             retries = isAprilTagVisible ? 0 : retries + 1;
             if (retries > 10) {
@@ -195,11 +207,11 @@ public abstract class BaseAutoOp extends LinearOpMode {
 
             if (stabilized) {
                 transferMotor.setPower(-1);
-                sleep(500);
+                sleep(700);
                 transferMotor.setPower(0);
                 artifactsInRobot--;
                 stabilized = false;
-                sleep(200);
+                sleep(300);
             }
 
             sleep(250);

@@ -1,11 +1,25 @@
 package com.medinarobotics.decode;
 
+import com.acmerobotics.roadrunner.AccelConstraint;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.AngularVelConstraint;
+import com.acmerobotics.roadrunner.Arclength;
+import com.acmerobotics.roadrunner.MecanumKinematics;
+import com.acmerobotics.roadrunner.MinMax;
+import com.acmerobotics.roadrunner.MinVelConstraint;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.Pose2dDual;
+import com.acmerobotics.roadrunner.PosePath;
+import com.acmerobotics.roadrunner.TankKinematics;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.TurnConstraints;
 import com.acmerobotics.roadrunner.Vector2d;
+import com.acmerobotics.roadrunner.VelConstraint;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class DecodeActions {
@@ -15,6 +29,7 @@ public class DecodeActions {
     public int fieldSide;
     public Pose2d startingPose;
     public Pose2d shootingPose;
+    public Pose2d endingPose;
 
     public DecodeActions(Team team,
                          StartingLocation startingLocation,
@@ -30,6 +45,8 @@ public class DecodeActions {
                 shootingLocation == ShootingLocation.NEAR_OBELISK ?
                         new Pose2d(new Vector2d(-63, -13 * fieldSide),  Math.toRadians(-90 * fieldSide)) :
                         new Pose2d(new Vector2d(54, -18 * fieldSide), Math.toRadians(200 * fieldSide));
+
+        endingPose = new Pose2d(new Vector2d(36, -24 * fieldSide), Math.toRadians(-90 * fieldSide));
     }
 
     public Pose2d getInitialPosition() {
@@ -57,12 +74,26 @@ public class DecodeActions {
     }
 
     public Action getBallCollectionAction(TrajectoryActionBuilder trajectoryActionBuilder, int ballRow) {
+
+//        double maxWheelVel = 50;
+//        double minProfileAccel = -30;
+//        double maxProfileAccel = 50;
+
+        VelConstraint slowVel = (vel, pose, deriv) -> 15;
+        AccelConstraint slowAccel = (accel, pose, deriv) -> new MinMax(-9, 15);
+
         return trajectoryActionBuilder
                 .turnTo(Math.toRadians(-90 * fieldSide))
-                .strafeTo(new Vector2d(-12 + ballRow * 24, -25 * fieldSide))
-                .strafeTo(new Vector2d(-12 + ballRow * 24, (ballRow == 0 ? -56 : -62) * fieldSide))
+                .strafeTo(new Vector2d(-9 + ballRow * 24, -25 * fieldSide))
+                .strafeTo(new Vector2d(-9 + ballRow * 24, (ballRow == 0 ? -58 : -62) * fieldSide), slowVel, slowAccel)
                 .strafeTo(shootingPose.position)
                 .turnTo(shootingPose.heading)
+                .build();
+    }
+
+    public Action getEndAction(TrajectoryActionBuilder trajectoryActionBuilder) {
+        return trajectoryActionBuilder
+                .strafeTo(endingPose.position)
                 .build();
     }
 }
