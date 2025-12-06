@@ -31,22 +31,45 @@ public class DecodeActions {
     public Pose2d shootingPose;
     public Pose2d endingPose;
 
+    public Team team;
+    public ShootingLocation shootingLocation;
+    public StartingLocation startingLocation;
+
     public DecodeActions(Team team,
                          StartingLocation startingLocation,
                          ShootingLocation shootingLocation) {
+        this.team = team;
+        this.shootingLocation = shootingLocation;
+        this.startingLocation = startingLocation;
+
         fieldSide = team.equals(Team.BLUE) ? 1 : -1;
 
         startingPose = startingLocation == StartingLocation.SMALL_TRIANGLE ?
                 new Pose2d(new Vector2d(72 - ROBOT_WIDTH / 2, -24 * fieldSide), Math.toRadians(180)) :
                 new Pose2d(new Vector2d(-58 + ROBOT_HEIGHT / 2, -58 * fieldSide + ROBOT_HEIGHT * fieldSide / 2), Math.toRadians(-135 * fieldSide));
 
-        shootingPose = shootingLocation == ShootingLocation.NEAR_FIELD_CENTER ?
-                new Pose2d(new Vector2d(-6, -18 * fieldSide), Math.toRadians(220 * fieldSide)) :
-                shootingLocation == ShootingLocation.NEAR_OBELISK ?
-                        new Pose2d(new Vector2d(-63, -13 * fieldSide),  Math.toRadians(-90 * fieldSide)) :
-                        new Pose2d(new Vector2d(54, -18 * fieldSide), Math.toRadians(200 * fieldSide));
+        if (team == Team.BLUE) {
+            shootingPose = shootingLocation == ShootingLocation.NEAR_FIELD_CENTER ?
+                    new Pose2d(new Vector2d(-6, -18 * fieldSide), Math.toRadians(220 * fieldSide)) :
+                    shootingLocation == ShootingLocation.NEAR_OBELISK ?
+                            new Pose2d(new Vector2d(-63, -13 * fieldSide), Math.toRadians(-90 * fieldSide)) :
+                            new Pose2d(new Vector2d(54, -18 * fieldSide), Math.toRadians(200 * fieldSide));
 
-        endingPose = new Pose2d(new Vector2d(36, -24 * fieldSide), Math.toRadians(-90 * fieldSide));
+            endingPose = new Pose2d(new Vector2d(36, -24 * fieldSide), Math.toRadians(-90 * fieldSide));
+        } else {
+            // RED ADJUSTMENTS
+            if (shootingLocation == ShootingLocation.NEAR_FIELD_CENTER) {
+                shootingPose = new Pose2d(new Vector2d(-8, -20 * fieldSide), Math.toRadians(220 * fieldSide)) ;
+            }
+            else if (shootingLocation == ShootingLocation.NEAR_OBELISK) {
+                shootingPose = new Pose2d(new Vector2d(-63, -13 * fieldSide),  Math.toRadians(-90 * fieldSide));
+            } else {
+                // shootingLocation == ShootingLocation.NEAR_SMALL_TRIANGLE
+                shootingPose = new Pose2d(new Vector2d(54, -18 * fieldSide), Math.toRadians(200 * fieldSide));
+            }
+
+            endingPose = new Pose2d(new Vector2d(36, -24 * fieldSide), Math.toRadians(-90 * fieldSide));
+        }
     }
 
     public Pose2d getInitialPosition() {
@@ -82,10 +105,20 @@ public class DecodeActions {
         VelConstraint slowVel = (vel, pose, deriv) -> 15;
         AccelConstraint slowAccel = (accel, pose, deriv) -> new MinMax(-9, 15);
 
+        if (team == Team.BLUE) {
+            return trajectoryActionBuilder
+                    .turnTo(Math.toRadians(-90 * fieldSide))
+                    .strafeTo(new Vector2d(-9 + ballRow * 24, -25 * fieldSide))
+                    .strafeTo(new Vector2d(-9 + ballRow * 24, (ballRow == 0 ? -58 : -62) * fieldSide), slowVel, slowAccel)
+                    .strafeTo(shootingPose.position)
+                    .turnTo(shootingPose.heading)
+                    .build();
+        }
+
         return trajectoryActionBuilder
-                .turnTo(Math.toRadians(-90 * fieldSide))
-                .strafeTo(new Vector2d(-9 + ballRow * 24, -25 * fieldSide))
-                .strafeTo(new Vector2d(-9 + ballRow * 24, (ballRow == 0 ? -58 : -62) * fieldSide), slowVel, slowAccel)
+                .turnTo(Math.toRadians(-95 * fieldSide))
+                .strafeTo(new Vector2d(-9 + ballRow * 24 + 3, -25 * fieldSide))
+                .strafeTo(new Vector2d(-9 + ballRow * 24 + 3, (ballRow == 0 ? -58 : -62) * fieldSide), slowVel, slowAccel)
                 .strafeTo(shootingPose.position)
                 .turnTo(shootingPose.heading)
                 .build();
